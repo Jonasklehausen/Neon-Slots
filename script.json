@@ -1,4 +1,4 @@
-// Konfiguration der Symbole & Wahrscheinlichkeiten
+
 const SYMBOLS = [
     { icon: '🍒', multiplier: 3, weight: 35 },
     { icon: '🍋', multiplier: 5, weight: 25 },
