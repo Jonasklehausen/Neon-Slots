@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEON VEGAS | Modern Slot Experience</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="background-glow"></div>
+
+    <!-- Header / Navigation -->
+    <header class="navbar">
+        <div class="logo">NEON<span>VEGAS</span></div>
+        <div class="wallet-box">
+            <span class="wallet-label">Guthaben:</span>
+            <span id="balance" class="wallet-amount">1.000,00 €</span>
+            <button id="refill-btn" class="btn-small" title="Guthaben aufladen">+</button>
+        </div>
+    </header>
+
+    <!-- Hauptbereich -->
+    <main class="container">
+        <div class="slot-machine-card">
+            <div class="machine-header">
+                <h1>CYBER FORTUNE 777</h1>
+                <p id="status-message" class="status-text">Viel Glück! Drücke SPIN zum Starten.</p>
+            </div>
+
+            <!-- Die 3 Walzen (Reels) -->
+            <div class="reels-container">
+                <div class="payline"></div>
+                <div class="reel" id="reel1">
+                    <div class="symbols">🍒</div>
+                </div>
+                <div class="reel" id="reel2">
+                    <div class="symbols">🍋</div>
+                </div>
+                <div class="reel" id="reel3">
+                    <div class="symbols">💎</div>
+                </div>
+            </div>
+
+            <!-- Steuerung & Einsatz -->
+            <div class="controls">
+                <div class="bet-control">
+                    <span>Einsatz:</span>
+                    <button id="bet-minus" class="btn-circle">-</button>
+                    <span id="bet-amount">10 €</span>
+                    <button id="bet-plus" class="btn-circle">+</button>
+                </div>
+
+                <button id="spin-btn" class="btn-spin">SPIN</button>
+
+                <div class="last-win">
+                    <span>Letzter Gewinn:</span>
+                    <strong id="last-win-amount">0,00 €</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gewinntabelle (Paytable) -->
+        <section class="paytable">
+            <h3>Gewinntabelle (3 Gleiche)</h3>
+            <div class="paytable-grid">
+                <div class="pay-item"><span>7️⃣ 7️⃣ 7️⃣</span> <strong>50x</strong></div>
+                <div class="pay-item"><span>💎 💎 💎</span> <strong>25x</strong></div>
+                <div class="pay-item"><span>🔔 🔔 🔔</span> <strong>15x</strong></div>
+                <div class="pay-item"><span>🍇 🍇 🍇</span> <strong>10x</strong></div>
+                <div class="pay-item"><span>🍋 🍋 🍋</span> <strong>5x</strong></div>
+                <div class="pay-item"><span>🍒 🍒 🍒</span> <strong>3x</strong></div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>Hinweis: Dies ist ein reines Unterhaltungsspiel ohne Echtgeld-Einsatz.</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
