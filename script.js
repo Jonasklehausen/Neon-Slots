@@ -64,42 +64,26 @@ const SHOP_ITEMS = [
     {
         id: 'title_vip',
         type: 'title',
-        badge: '🔥 Neon VIP',
-        name: 'Titel: Neon VIP',
+        badge: '👑 Royal VIP',
+        name: 'Titel: Royal VIP',
         price: 5000,
         desc: 'Rein kosmetischer VIP-Status für dein Profil.'
     },
     {
         id: 'title_shark',
         type: 'title',
-        badge: '🦈 Cyber Shark',
-        name: 'Titel: Cyber Shark',
+        badge: '🦈 Golden Shark',
+        name: 'Titel: Golden Shark',
         price: 15000,
-        desc: 'Zeige allen im Leaderboard, wer das Becken regiert.'
+        desc: 'Zeige allen im Leaderboard, wer den Tisch dominiert.'
     },
     {
         id: 'title_whale',
         type: 'title',
-        badge: '🛸 Galactic Whale',
-        name: 'Titel: Galactic Whale',
+        badge: '🏆 Sovereign Whale',
+        name: 'Titel: Sovereign Whale',
         price: 50000,
         desc: 'Der ultimative kosmetische Prestige-Titel.'
-    },
-    {
-        id: 'theme_cyberpunk',
-        type: 'theme',
-        themeClass: 'theme-cyberpunk',
-        name: '💜 Theme: Cyberpunk Neon',
-        price: 2500,
-        desc: 'Färbt den Automaten in leuchtendes Neon-Violett.'
-    },
-    {
-        id: 'theme_gold',
-        type: 'theme',
-        themeClass: 'theme-gold',
-        name: '💛 Theme: 24K Gold Edition',
-        price: 10000,
-        desc: 'Verleiht deiner Slot-Maschine einen edlen Gold-Glow.'
     }
 ];
 
@@ -297,8 +281,7 @@ async function handleAuthSubmit() {
                 banned: false,
                 isAdmin: newId === SUPER_ADMIN_ID,
                 ownedItems: {},
-                equippedTitle: '',
-                equippedTheme: ''
+                equippedTitle: ''
             };
 
             await db.ref(`users/${newId}`).set(newUser);
@@ -412,11 +395,6 @@ function updateUI() {
             dashboardModal.classList.add('hidden');
         }
 
-        slotCard.classList.remove('theme-cyberpunk', 'theme-gold');
-        if (user.equippedTheme) {
-            slotCard.classList.add(user.equippedTheme);
-        }
-
         const rankInfo = getRankInfo(user.rank);
         const rankBadgeEl = document.getElementById('display-rank-badge');
         rankBadgeEl.textContent = user.equippedTitle ? `${rankInfo.label} • ${user.equippedTitle}` : rankInfo.label;
@@ -435,7 +413,6 @@ function updateUI() {
         logoutBtn.classList.add('hidden');
         if (adminBtn) adminBtn.classList.add('hidden');
         if (dashboardModal) dashboardModal.classList.add('hidden');
-        slotCard.classList.remove('theme-cyberpunk', 'theme-gold');
         balanceEl.textContent = '0';
         authModal.classList.remove('hidden');
     }
@@ -463,25 +440,23 @@ function renderShop() {
 
     SHOP_ITEMS.forEach(item => {
         const owned = userOwnsItem(user, item.id);
-        const isEquipped =
-            (item.type === 'title' && user.equippedTitle === item.badge) ||
-            (item.type === 'theme' && user.equippedTheme === item.themeClass);
+        const isEquipped = item.type === 'title' && user.equippedTitle === item.badge;
 
         let btnHtml = '';
         if (!owned) {
             const canAfford = user.coins >= item.price;
-            btnHtml = `<button class="mini-btn" style="width:100%; margin-top:10px; background:${canAfford ? 'var(--gold-main)' : 'rgba(255,255,255,0.1)'}; color:${canAfford ? '#000' : '#888'}; font-weight:800;" onclick="buyShopItem('${item.id}')">Kaufen (${item.price.toLocaleString('de-DE')} 🪙)</button>`;
-        } else if (item.type === 'title' || item.type === 'theme') {
-            btnHtml = `<button class="mini-btn" style="width:100%; margin-top:10px; background:${isEquipped ? 'rgba(0,230,118,0.2)' : 'rgba(0,229,255,0.2)'}; color:${isEquipped ? '#00e676' : '#00e5ff'};" onclick="equipShopItem('${item.id}')">${isEquipped ? '✅ Aktiv (Ablegen)' : '✨ Auswählen'}</button>`;
+            btnHtml = `<button class="mini-btn" style="width:100%; margin-top:10px; background:${canAfford ? 'linear-gradient(180deg, #f7df8b, #d4af37)' : 'rgba(255,255,255,0.08)'}; color:${canAfford ? '#000' : '#888'}; font-weight:800;" onclick="buyShopItem('${item.id}')">Kaufen (${item.price.toLocaleString('de-DE')} 🪙)</button>`;
+        } else if (item.type === 'title') {
+            btnHtml = `<button class="mini-btn" style="width:100%; margin-top:10px; background:${isEquipped ? 'rgba(212,175,55,0.28)' : 'rgba(212,175,55,0.12)'}; color:var(--gold-light);" onclick="equipShopItem('${item.id}')">${isEquipped ? '✅ Aktiv (Ablegen)' : '✨ Titel anlegen'}</button>`;
         } else {
-            btnHtml = `<button class="mini-btn" disabled style="width:100%; margin-top:10px; background:rgba(0,230,118,0.15); color:#00e676;">✅ Freigeschaltet</button>`;
+            btnHtml = `<button class="mini-btn" disabled style="width:100%; margin-top:10px; background:rgba(212,175,55,0.18); color:var(--gold-light);">✅ Freigeschaltet</button>`;
         }
 
         const card = document.createElement('div');
-        card.style.cssText = 'background: var(--bg-elevated); border: 1px solid var(--border-subtle); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between;';
+        card.style.cssText = 'background: #0d0b08; border: 1px solid var(--border-gold); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between;';
         card.innerHTML = `
             <div>
-                <div style="font-weight: 800; font-size: 0.98rem; color: #fff; margin-bottom: 4px;">${item.name}</div>
+                <div style="font-weight: 800; font-size: 0.98rem; color: var(--gold-light); margin-bottom: 4px;">${item.name}</div>
                 <div style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.35;">${item.desc}</div>
             </div>
             ${btnHtml}
@@ -507,8 +482,6 @@ window.buyShopItem = function(itemId) {
 
     if (item.type === 'title') {
         db.ref(`users/${user.id}/equippedTitle`).set(item.badge);
-    } else if (item.type === 'theme') {
-        db.ref(`users/${user.id}/equippedTheme`).set(item.themeClass);
     }
 
     addCloudLog(`🛒 ${user.id} (${user.username}) kaufte "${item.name}" für ${item.price} 🪙.`);
@@ -523,9 +496,6 @@ window.equipShopItem = function(itemId) {
     if (item.type === 'title') {
         const nextVal = user.equippedTitle === item.badge ? '' : item.badge;
         db.ref(`users/${user.id}/equippedTitle`).set(nextVal);
-    } else if (item.type === 'theme') {
-        const nextVal = user.equippedTheme === item.themeClass ? '' : item.themeClass;
-        db.ref(`users/${user.id}/equippedTheme`).set(nextVal);
     }
 };
 
@@ -1044,15 +1014,15 @@ function renderAdminPlayers() {
 
         let roleTag = '';
         if (targetIsOwner) {
-            roleTag = `<span style="background: rgba(255,215,0,0.18); color: #ffd700; border: 1px solid rgba(255,215,0,0.45); padding: 2px 6px; border-radius: 6px; font-size: 0.72rem; font-weight: 700;">👑 OWNER</span>`;
+            roleTag = `<span style="background: rgba(212,175,55,0.2); color: var(--gold-light); border: 1px solid var(--border-gold); padding: 2px 6px; border-radius: 6px; font-size: 0.72rem; font-weight: 700;">👑 OWNER</span>`;
         } else if (targetIsAdmin) {
-            roleTag = `<span style="background: rgba(0,229,255,0.15); color: #00e5ff; border: 1px solid rgba(0,229,255,0.4); padding: 2px 6px; border-radius: 6px; font-size: 0.72rem; font-weight: 700;">🛡️ ADMIN</span>`;
+            roleTag = `<span style="background: rgba(212,175,55,0.12); color: var(--gold-main); border: 1px solid rgba(212,175,55,0.35); padding: 2px 6px; border-radius: 6px; font-size: 0.72rem; font-weight: 700;">🛡️ ADMIN</span>`;
         }
 
         let adminToggleBtn = '';
         if (canManageAdmins && !targetIsOwner) {
             adminToggleBtn = `
-                <button class="mini-btn" style="background: ${targetIsAdmin ? 'rgba(255,152,0,0.2)' : 'rgba(0,229,255,0.2)'}; color: ${targetIsAdmin ? '#ffb74d' : '#00e5ff'}; border: 1px solid ${targetIsAdmin ? 'rgba(255,152,0,0.45)' : 'rgba(0,229,255,0.45)'};" onclick="toggleAdminRole('${user.id}')">
+                <button class="mini-btn" onclick="toggleAdminRole('${user.id}')">
                     ${targetIsAdmin ? '- Admin' : '+ Admin'}
                 </button>
             `;
