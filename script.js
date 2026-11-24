@@ -14,9 +14,7 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
 // ==================== 2. VERSCHLÜSSELTES ADMIN-PASSWORT (SHA-256) ====================
-// Dein Passwort steht hier NICHT im Klartext, sondern als kryptografischer Hash:
-const ADMIN_HASH = "31bc3d6346704e4f3f3a9d6f4e45d44257a12239c70be5e5d94b86fa20b67e7e";
-
+const ADMIN_HASH = "e00e6002b7b19412770b4c14e948c2053632e078c737c4176158f48c0142f2d2";
 
 async function sha256(text) {
     const encoder = new TextEncoder();
@@ -25,6 +23,7 @@ async function sha256(text) {
     const hashArray = Array.from(new Uint8Array(hashBuffer));
     return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
+
 
 // ==================== 3. SPIEL-KONFIGURATION ====================
 const RANKS = {
