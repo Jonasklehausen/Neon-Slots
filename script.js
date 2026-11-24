@@ -355,7 +355,7 @@ const reels = [
 function updateAutoSpinButtonUI(user) {
     if (!autoSpinBtn) return;
     if (!user || !userOwnsItem(user, 'feature_autospin')) {
-        autoSpinBtn.textContent = '🤖 Auto-Spin (🔒 1.500 🪙 im Shop)';
+        autoSpinBtn.textContent = '🤖 Auto-Spin (🔒 1.500 🪙)';
         autoSpinBtn.classList.remove('auto-active');
         return;
     }
@@ -365,7 +365,7 @@ function updateAutoSpinButtonUI(user) {
         return;
     }
     if (isAutoSpinning) {
-        autoSpinBtn.textContent = '⏹️ Auto-Spin: AN (Stoppen)';
+        autoSpinBtn.textContent = '⏹️ Auto-Spin: AN';
         autoSpinBtn.classList.add('auto-active');
     } else {
         autoSpinBtn.textContent = '🤖 Auto-Spin: AUS';
@@ -402,7 +402,7 @@ function updateUI() {
 
         document.getElementById('display-user-id').textContent = user.id;
         document.getElementById('display-username').textContent = user.username;
-        document.getElementById('corner-id-text').textContent = `${user.id} • ${user.username} (${rankInfo.label})`;
+        document.getElementById('corner-id-text').textContent = `${user.id} (${user.username})`;
         balanceEl.textContent = user.coins.toLocaleString('de-DE');
 
         const shopBal = document.getElementById('shop-balance-display');
@@ -422,10 +422,14 @@ function updateUI() {
 
 // ==================== 6B. COIN SHOP LOGIK ====================
 const shopModal = document.getElementById('shop-modal');
-document.getElementById('open-shop-btn').addEventListener('click', () => {
+function openShopModal() {
     renderShop();
     shopModal.classList.remove('hidden');
-});
+}
+
+document.getElementById('open-shop-btn').addEventListener('click', openShopModal);
+const openShopCabBtn = document.getElementById('open-shop-cabinet-btn');
+if (openShopCabBtn) openShopCabBtn.addEventListener('click', openShopModal);
 
 document.getElementById('close-shop-btn').addEventListener('click', () => {
     shopModal.classList.add('hidden');
@@ -445,18 +449,18 @@ function renderShop() {
         let btnHtml = '';
         if (!owned) {
             const canAfford = user.coins >= item.price;
-            btnHtml = `<button class="mini-btn" style="width:100%; margin-top:10px; background:${canAfford ? 'linear-gradient(180deg, #f7df8b, #d4af37)' : 'rgba(255,255,255,0.08)'}; color:${canAfford ? '#000' : '#888'}; font-weight:800;" onclick="buyShopItem('${item.id}')">Kaufen (${item.price.toLocaleString('de-DE')} 🪙)</button>`;
+            btnHtml = `<button class="mini-btn" style="width:100%; margin-top:10px; padding:8px; background:${canAfford ? 'var(--gold-btn-gradient)' : 'rgba(255,255,255,0.08)'}; color:${canAfford ? '#080705' : '#888'}; font-weight:800;" onclick="buyShopItem('${item.id}')">Kaufen (${item.price.toLocaleString('de-DE')} 🪙)</button>`;
         } else if (item.type === 'title') {
-            btnHtml = `<button class="mini-btn" style="width:100%; margin-top:10px; background:${isEquipped ? 'rgba(212,175,55,0.28)' : 'rgba(212,175,55,0.12)'}; color:var(--gold-light);" onclick="equipShopItem('${item.id}')">${isEquipped ? '✅ Aktiv (Ablegen)' : '✨ Titel anlegen'}</button>`;
+            btnHtml = `<button class="mini-btn" style="width:100%; margin-top:10px; padding:8px; background:${isEquipped ? 'rgba(212,175,55,0.28)' : 'rgba(212,175,55,0.12)'}; color:var(--gold-light); border-color:var(--gold-main);" onclick="equipShopItem('${item.id}')">${isEquipped ? '✅ Aktiv (Ablegen)' : '✨ Titel anlegen'}</button>`;
         } else {
-            btnHtml = `<button class="mini-btn" disabled style="width:100%; margin-top:10px; background:rgba(212,175,55,0.18); color:var(--gold-light);">✅ Freigeschaltet</button>`;
+            btnHtml = `<button class="mini-btn" disabled style="width:100%; margin-top:10px; padding:8px; background:rgba(16,185,129,0.18); color:#34d399; border-color:var(--green-lux);">✅ Freigeschaltet</button>`;
         }
 
         const card = document.createElement('div');
-        card.style.cssText = 'background: #0d0b08; border: 1px solid var(--border-gold); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between;';
+        card.style.cssText = 'background: rgba(0, 0, 0, 0.45); border: 1px solid rgba(212, 175, 55, 0.25); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between;';
         card.innerHTML = `
             <div>
-                <div style="font-weight: 800; font-size: 0.98rem; color: var(--gold-light); margin-bottom: 4px;">${item.name}</div>
+                <div style="font-weight: 800; font-size: 0.96rem; color: var(--gold-light); margin-bottom: 4px;">${item.name}</div>
                 <div style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.35;">${item.desc}</div>
             </div>
             ${btnHtml}
@@ -594,8 +598,7 @@ autoSpinBtn.addEventListener('click', () => {
         return;
     }
     if (!userOwnsItem(user, 'feature_autospin')) {
-        renderShop();
-        shopModal.classList.remove('hidden');
+        openShopModal();
         return;
     }
     if (!isAutoSpinning && user.coins < AUTO_SPIN_MIN_COINS) {
@@ -1014,7 +1017,7 @@ function renderAdminPlayers() {
 
         let roleTag = '';
         if (targetIsOwner) {
-            roleTag = `<span style="background: rgba(212,175,55,0.2); color: var(--gold-light); border: 1px solid var(--border-gold); padding: 2px 6px; border-radius: 6px; font-size: 0.72rem; font-weight: 700;">👑 OWNER</span>`;
+            roleTag = `<span style="background: rgba(212,175,55,0.2); color: var(--gold-light); border: 1px solid var(--gold-main); padding: 2px 6px; border-radius: 6px; font-size: 0.72rem; font-weight: 700;">👑 OWNER</span>`;
         } else if (targetIsAdmin) {
             roleTag = `<span style="background: rgba(212,175,55,0.12); color: var(--gold-main); border: 1px solid rgba(212,175,55,0.35); padding: 2px 6px; border-radius: 6px; font-size: 0.72rem; font-weight: 700;">🛡️ ADMIN</span>`;
         }
@@ -1022,14 +1025,14 @@ function renderAdminPlayers() {
         let adminToggleBtn = '';
         if (canManageAdmins && !targetIsOwner) {
             adminToggleBtn = `
-                <button class="mini-btn" onclick="toggleAdminRole('${user.id}')">
+                <button class="mini-btn mini-select" onclick="toggleAdminRole('${user.id}')">
                     ${targetIsAdmin ? '- Admin' : '+ Admin'}
                 </button>
             `;
         }
 
         const banBtn = targetIsOwner ? '' : `
-            <button class="mini-btn btn-red" onclick="toggleBan('${user.id}')">${user.banned ? 'Entbannen' : 'Bannen'}</button>
+            <button class="mini-btn mini-ban" onclick="toggleBan('${user.id}')">${user.banned ? 'Entbannen' : 'Bannen'}</button>
         `;
 
         const item = document.createElement('div');
@@ -1045,7 +1048,7 @@ function renderAdminPlayers() {
                 <span style="color: var(--gold-light); font-size: 0.85rem; font-weight:700;">${user.coins.toLocaleString('de-DE')} 🪙</span>
             </div>
             <div class="player-actions">
-                <button class="mini-btn btn-blue" onclick="selectIdForAdmin('${user.id}')">ID wählen</button>
+                <button class="mini-btn mini-select" onclick="selectIdForAdmin('${user.id}')">ID wählen</button>
                 ${adminToggleBtn}
                 ${banBtn}
             </div>
