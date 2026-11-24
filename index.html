@@ -61,7 +61,6 @@
         <div class="cabinet-wrapper">
             <div id="slot-card" class="vintage-cabinet">
                 
-                <!-- 1. Obere abgerundete Rubinrot-Gold-Haube -->
                 <div class="cabinet-hood">
                     <div class="hood-ornament">
                         <span class="ornament-wing">❧</span>
@@ -71,12 +70,10 @@
                     <div class="hood-title">IMPERIAL FORTUNE</div>
                 </div>
 
-                <!-- 2. Mittlerer Walzen-Körper -->
                 <div class="cabinet-body">
                     <div class="gold-pointer-top">▼</div>
                     
                     <div class="reels-bezel">
-                        <!-- Linke Metall-Schiene mit Edelsteinen -->
                         <div class="side-track">
                             <span class="gem-stud"></span>
                             <span class="gem-stud"></span>
@@ -84,14 +81,12 @@
                             <span class="gem-stud"></span>
                         </div>
 
-                        <!-- Die 3 gewölbten Elfenbein-Walzen -->
                         <div class="reels-container">
                             <div class="reel" id="reel1"><span class="reel-symbol">💎</span></div>
                             <div class="reel" id="reel2"><span class="reel-symbol">7️⃣</span></div>
                             <div class="reel" id="reel3"><span class="reel-symbol">👑</span></div>
                         </div>
 
-                        <!-- Rechte Metall-Schiene mit Edelsteinen -->
                         <div class="side-track">
                             <span class="gem-stud"></span>
                             <span class="gem-stud"></span>
@@ -100,21 +95,18 @@
                         </div>
                     </div>
 
-                    <!-- Königsblauer Status-Balken & Münzeinwurf -->
                     <div class="status-plate-row">
                         <div id="status-text" class="status-text">Einsatz wählen & Hebel ziehen!</div>
                         <div class="coin-slot-emblem" title="Münzeinwurf">COINS</div>
                     </div>
                 </div>
 
-                <!-- 3. Königsblaue Zierleiste & Chrome-Knöpfe -->
                 <div class="cabinet-trim-bar">
                     <span class="chrome-switch"></span>
                     <span class="chrome-button"></span>
                     <span class="chrome-switch"></span>
                 </div>
 
-                <!-- 4. Unterer Sockel & Münzauswurf-Fach (Steuerung) -->
                 <div class="cabinet-base">
                     <div class="payout-tray">
                         <div class="tray-lock">👁️</div>
@@ -136,7 +128,6 @@
 
             </div>
 
-            <!-- 5. Einarmiger Bandit Hebel rechts -->
             <div class="lever-assembly" id="lever-assembly" title="Hebel ziehen zum Drehen!">
                 <div class="lever-mount"></div>
                 <div class="lever-arm" id="lever-arm">
@@ -165,7 +156,7 @@
                     <span class="subtitle-crown" style="margin-bottom: 2px;">✦ HALL OF FAME ✦</span>
                     <h2>LIVE HIGH-ROLLER LEADERBOARD</h2>
                 </div>
-                <span class="live-indicator"><span class="pulse-dot"></span> LIVE</span>
+                <span class="live-indicator"><span class="pulse-dot"></span> CLOUD LIVE</span>
             </div>
 
             <div class="leaderboard-table-wrapper">
@@ -185,7 +176,6 @@
         </section>
     </main>
 
-    <!-- Permanentes ID-Wasserzeichen unten links -->
     <div id="corner-id-badge" class="corner-id-badge hidden">
         Mitglieds-ID: <strong id="corner-id-text">ID1</strong>
     </div>
@@ -328,6 +318,9 @@
         </div>
     </div>
 
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
