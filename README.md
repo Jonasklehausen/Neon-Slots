@@ -12,6 +12,8 @@
 
 [📂 Repository ansehen](https://github.com/Jonasklehausen/Neon-Slots) · [🐞 Bug melden](https://github.com/Jonasklehausen/Neon-Slots/issues) · [✨ Feature vorschlagen](https://github.com/Jonasklehausen/Neon-Slots/issues)
 
+https://jonasklehausen.github.io/Neon-Slots/
+
 </div>
 
 ---
