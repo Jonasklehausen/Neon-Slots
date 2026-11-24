@@ -13,19 +13,43 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// ==================== 1B. CASINO SOUND ENGINE (WEB AUDIO API) ====================
+// ==================== 1B. CASINO SOUND ENGINE (GITHUB PAGES KOMPATIBEL) ====================
 let audioCtx = null;
 let isMuted = localStorage.getItem('aureliaMuted') === 'true';
 
-function getAudioContext() {
+function initOrUnlockAudio() {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextClass) return null;
+
     if (!audioCtx) {
-        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-        if (AudioContextClass) audioCtx = new AudioContextClass();
+        audioCtx = new AudioContextClass();
     }
-    if (audioCtx && audioCtx.state === 'suspended') {
-        audioCtx.resume();
+    if (audioCtx.state === 'suspended') {
+        audioCtx.resume().catch(() => {});
     }
     return audioCtx;
+}
+
+// Entsperrt Audio sofort beim ersten Klick/Touch/Tastendruck auf GitHub Pages
+['pointerdown', 'touchstart', 'click', 'keydown'].forEach(evt => {
+    window.addEventListener(evt, () => {
+        initOrUnlockAudio();
+    }, { passive: true });
+});
+
+async function withReadyAudio(callback) {
+    if (isMuted) return;
+    const ctx = initOrUnlockAudio();
+    if (!ctx) return;
+
+    if (ctx.state === 'suspended') {
+        try {
+            await ctx.resume();
+        } catch (e) {
+            return;
+        }
+    }
+    callback(ctx);
 }
 
 const muteBtn = document.getElementById('mute-btn');
@@ -35,178 +59,171 @@ if (muteBtn) {
         isMuted = !isMuted;
         localStorage.setItem('aureliaMuted', isMuted);
         muteBtn.textContent = isMuted ? '🔇' : '🔊';
+        if (!isMuted) {
+            playReelStopSound(1);
+        }
     });
 }
 
 // 1. Klassischer Hebel- & Slot-Maschinen-Sound
 function playLeverPullSound() {
-    if (isMuted) return;
-    const ctx = getAudioContext();
-    if (!ctx) return;
-    const now = ctx.currentTime;
+    withReadyAudio((ctx) => {
+        const now = ctx.currentTime;
 
-    // Mechanisches Hebel-Klicken & Runterziehen
-    const leverOsc = ctx.createOscillator();
-    const leverGain = ctx.createGain();
-    leverOsc.type = 'sawtooth';
-    leverOsc.frequency.setValueAtTime(190, now);
-    leverOsc.frequency.exponentialRampToValueAtTime(75, now + 0.16);
-    leverGain.gain.setValueAtTime(0.18, now);
-    leverGain.gain.exponentialRampToValueAtTime(0.001, now + 0.17);
-    leverOsc.connect(leverGain);
-    leverGain.connect(ctx.destination);
-    leverOsc.start(now);
-    leverOsc.stop(now + 0.18);
+        const leverOsc = ctx.createOscillator();
+        const leverGain = ctx.createGain();
+        leverOsc.type = 'sawtooth';
+        leverOsc.frequency.setValueAtTime(190, now);
+        leverOsc.frequency.exponentialRampToValueAtTime(75, now + 0.16);
+        leverGain.gain.setValueAtTime(0.18, now);
+        leverGain.gain.exponentialRampToValueAtTime(0.001, now + 0.17);
+        leverOsc.connect(leverGain);
+        leverGain.connect(ctx.destination);
+        leverOsc.start(now);
+        leverOsc.stop(now + 0.18);
 
-    // Klassisches mechanisches Walzen-Rattern (Ticker-Klicks)
-    for (let i = 0; i < 11; i++) {
-        const tickTime = now + 0.14 + i * 0.065;
-        const tickOsc = ctx.createOscillator();
-        const tickGain = ctx.createGain();
-        tickOsc.type = 'triangle';
-        tickOsc.frequency.setValueAtTime(680 + (i % 2) * 140, tickTime);
-        tickOsc.frequency.exponentialRampToValueAtTime(220, tickTime + 0.035);
-        tickGain.gain.setValueAtTime(0.08, tickTime);
-        tickGain.gain.exponentialRampToValueAtTime(0.001, tickTime + 0.04);
-        tickOsc.connect(tickGain);
-        tickGain.connect(ctx.destination);
-        tickOsc.start(tickTime);
-        tickOsc.stop(tickTime + 0.045);
-    }
+        for (let i = 0; i < 11; i++) {
+            const tickTime = now + 0.14 + i * 0.065;
+            const tickOsc = ctx.createOscillator();
+            const tickGain = ctx.createGain();
+            tickOsc.type = 'triangle';
+            tickOsc.frequency.setValueAtTime(680 + (i % 2) * 140, tickTime);
+            tickOsc.frequency.exponentialRampToValueAtTime(220, tickTime + 0.035);
+            tickGain.gain.setValueAtTime(0.08, tickTime);
+            tickGain.gain.exponentialRampToValueAtTime(0.001, tickTime + 0.04);
+            tickOsc.connect(tickGain);
+            tickGain.connect(ctx.destination);
+            tickOsc.start(tickTime);
+            tickOsc.stop(tickTime + 0.045);
+        }
+    });
 }
 
 // Walzen-Einrast-Klick beim Stoppen
 function playReelStopSound(reelIndex) {
-    if (isMuted) return;
-    const ctx = getAudioContext();
-    if (!ctx) return;
-    const now = ctx.currentTime;
+    withReadyAudio((ctx) => {
+        const now = ctx.currentTime;
 
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(240 + reelIndex * 35, now);
-    osc.frequency.exponentialRampToValueAtTime(95, now + 0.09);
-    gain.gain.setValueAtTime(0.2, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start(now);
-    osc.stop(now + 0.11);
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(240 + reelIndex * 35, now);
+        osc.frequency.exponentialRampToValueAtTime(95, now + 0.09);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.11);
+    });
 }
 
 // 2. Niederlagen-Sound (sanft abfallender Zwei-Ton-Klang)
 function playLoseSound() {
-    if (isMuted) return;
-    const ctx = getAudioContext();
-    if (!ctx) return;
-    const now = ctx.currentTime;
+    withReadyAudio((ctx) => {
+        const now = ctx.currentTime;
 
-    const notes = [293.66, 220.00]; // D4 -> A3
-    notes.forEach((freq, idx) => {
-        const start = now + idx * 0.22;
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(freq, start);
-        osc.frequency.linearRampToValueAtTime(freq * 0.92, start + 0.24);
-        gain.gain.setValueAtTime(0.15, start);
-        gain.gain.exponentialRampToValueAtTime(0.001, start + 0.26);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start(start);
-        osc.stop(start + 0.28);
+        const notes = [293.66, 220.00];
+        notes.forEach((freq, idx) => {
+            const start = now + idx * 0.22;
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(freq, start);
+            osc.frequency.linearRampToValueAtTime(freq * 0.92, start + 0.24);
+            gain.gain.setValueAtTime(0.15, start);
+            gain.gain.exponentialRampToValueAtTime(0.001, start + 0.26);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(start);
+            osc.stop(start + 0.28);
+        });
     });
 }
 
 // Kleiner Gewinn (2 Gleiche oder 2x-5x)
 function playSmallWinSound() {
-    if (isMuted) return;
-    const ctx = getAudioContext();
-    if (!ctx) return;
-    const now = ctx.currentTime;
+    withReadyAudio((ctx) => {
+        const now = ctx.currentTime;
 
-    [523.25, 659.25, 783.99].forEach((freq, idx) => {
-        const start = now + idx * 0.08;
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(freq, start);
-        gain.gain.setValueAtTime(0.14, start);
-        gain.gain.exponentialRampToValueAtTime(0.001, start + 0.22);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start(start);
-        osc.stop(start + 0.24);
+        [523.25, 659.25, 783.99].forEach((freq, idx) => {
+            const start = now + idx * 0.08;
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, start);
+            gain.gain.setValueAtTime(0.14, start);
+            gain.gain.exponentialRampToValueAtTime(0.001, start + 0.22);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(start);
+            osc.stop(start + 0.24);
+        });
     });
 }
 
 // 3. Hauptgewinn-Sound (Royal Jackpot Fanfare + Münzregen-Glitzern ab 15x)
 function playJackpotFanfareSound() {
-    if (isMuted) return;
-    const ctx = getAudioContext();
-    if (!ctx) return;
-    const now = ctx.currentTime;
+    withReadyAudio((ctx) => {
+        const now = ctx.currentTime;
 
-    // Fanfaren-Akkordfolge (C5 - E5 - G5 - C6 - E6 - G6)
-    const fanfare = [
-        { freq: 523.25, time: 0.00, dur: 0.16 },
-        { freq: 659.25, time: 0.12, dur: 0.16 },
-        { freq: 783.99, time: 0.24, dur: 0.16 },
-        { freq: 1046.50, time: 0.38, dur: 0.45 },
-        { freq: 987.77, time: 0.56, dur: 0.14 },
-        { freq: 1046.50, time: 0.70, dur: 0.65 }
-    ];
+        const fanfare = [
+            { freq: 523.25, time: 0.00, dur: 0.16 },
+            { freq: 659.25, time: 0.12, dur: 0.16 },
+            { freq: 783.99, time: 0.24, dur: 0.16 },
+            { freq: 1046.50, time: 0.38, dur: 0.45 },
+            { freq: 987.77, time: 0.56, dur: 0.14 },
+            { freq: 1046.50, time: 0.70, dur: 0.65 }
+        ];
 
-    fanfare.forEach(note => {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(note.freq, now + note.time);
-        gain.gain.setValueAtTime(0.22, now + note.time);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + note.time + note.dur);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start(now + note.time);
-        osc.stop(now + note.time + note.dur + 0.02);
+        fanfare.forEach(note => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(note.freq, now + note.time);
+            gain.gain.setValueAtTime(0.22, now + note.time);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + note.time + note.dur);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(now + note.time);
+            osc.stop(now + note.time + note.dur + 0.02);
+        });
+
+        for (let i = 0; i < 10; i++) {
+            const t = now + 0.45 + i * 0.09;
+            const coinOsc = ctx.createOscillator();
+            const coinGain = ctx.createGain();
+            coinOsc.type = 'sine';
+            coinOsc.frequency.setValueAtTime(1760 + (i % 3) * 330, t);
+            coinGain.gain.setValueAtTime(0.09, t);
+            coinGain.gain.exponentialRampToValueAtTime(0.001, t + 0.14);
+            coinOsc.connect(coinGain);
+            coinGain.connect(ctx.destination);
+            coinOsc.start(t);
+            coinOsc.stop(t + 0.15);
+        }
     });
-
-    // Funkelnde Goldmünzen-Klingeltöne
-    for (let i = 0; i < 10; i++) {
-        const t = now + 0.45 + i * 0.09;
-        const coinOsc = ctx.createOscillator();
-        const coinGain = ctx.createGain();
-        coinOsc.type = 'sine';
-        coinOsc.frequency.setValueAtTime(1760 + (i % 3) * 330, t);
-        coinGain.gain.setValueAtTime(0.09, t);
-        coinGain.gain.exponentialRampToValueAtTime(0.001, t + 0.14);
-        coinOsc.connect(coinGain);
-        coinGain.connect(ctx.destination);
-        coinOsc.start(t);
-        coinOsc.stop(t + 0.15);
-    }
 }
 
 // 4. Server-Broadcast-Sound (Edler Club-Gong / Chime)
 function playBroadcastSound() {
-    if (isMuted) return;
-    const ctx = getAudioContext();
-    if (!ctx) return;
-    const now = ctx.currentTime;
+    withReadyAudio((ctx) => {
+        const now = ctx.currentTime;
 
-    const chimeNotes = [880, 1108.73, 1318.51]; // A5 - C#6 - E6
-    chimeNotes.forEach((freq, idx) => {
-        const start = now + idx * 0.11;
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(freq, start);
-        gain.gain.setValueAtTime(0.16, start);
-        gain.gain.exponentialRampToValueAtTime(0.001, start + 0.45);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start(start);
-        osc.stop(start + 0.48);
+        const chimeNotes = [880, 1108.73, 1318.51];
+        chimeNotes.forEach((freq, idx) => {
+            const start = now + idx * 0.11;
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, start);
+            gain.gain.setValueAtTime(0.16, start);
+            gain.gain.exponentialRampToValueAtTime(0.001, start + 0.45);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(start);
+            osc.stop(start + 0.48);
+        });
     });
 }
 
@@ -438,6 +455,7 @@ tabRegister.addEventListener('click', () => {
 });
 
 async function handleAuthSubmit() {
+    initOrUnlockAudio();
     const username = authUsernameInput.value.trim();
     const password = authPasswordInput.value.trim();
 
@@ -872,7 +890,6 @@ spinBtn.addEventListener('click', () => {
         return;
     }
 
-    // Klassischen Hebel- & Slot-Sound abspielen
     playLeverPullSound();
     pullLeverAnimation();
 
@@ -970,7 +987,6 @@ function checkWin(results) {
         addCloudLog(`🎉 ${r1.multiplier}x GEWINN für ${user.id} (${user.username}): +${winAmount} 🪙 (${r1.icon}${r2.icon}${r3.icon})`);
 
         if (r1.multiplier >= 15) {
-            // Hauptgewinn-Fanfare abspielen
             playJackpotFanfareSound();
             triggerMegaWinAnimation(user, r1, winAmount);
             pushGlobalBroadcast(
@@ -988,7 +1004,6 @@ function checkWin(results) {
         statusEl.classList.add('status-win');
         statusEl.textContent = `✨ 2 Gleiche! Sie erhalten ${smallWin.toLocaleString('de-DE')} 🪙 zurück.`;
     } else {
-        // Niederlagen-Sound abspielen
         playLoseSound();
         updateLastWin(0);
         statusEl.classList.remove('status-win');
