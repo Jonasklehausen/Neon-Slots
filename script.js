@@ -15,7 +15,8 @@ const db = firebase.database();
 
 // ==================== 2. VERSCHLÜSSELTES ADMIN-PASSWORT (SHA-256) ====================
 // Dein Passwort steht hier NICHT im Klartext, sondern als kryptografischer Hash:
-const ADMIN_HASH = "3a89554b626c0c8d8f09c3b8e0d8c4d97b9f8d5a87a98d6e10b8d7f63a8b5901";
+const ADMIN_HASH = "31bc3d6346704e4f3f3a9d6f4e45d44257a12239c70be5e5d94b86fa20b67e7e";
+
 
 async function sha256(text) {
     const encoder = new TextEncoder();
