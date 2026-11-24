@@ -1,7 +1,32 @@
-// ==================== KONFIGURATION ====================
-const ADMIN_PASSWORD = "admin1234"; // <-- Dein Admin-Passwort!
 
-// Exklusive Ränge & ihre Gewinn-Multiplikator-Boni
+// ==================== 1. FIREBASE KONFIGURATION ====================
+const firebaseConfig = {
+    apiKey: "AIzaSyC13VT3XZ0FycilSOg_OvU883pSjAQvPE8",
+    authDomain: "neon-slots-c7e4a.firebaseapp.com",
+    databaseURL: "https://neon-slots-c7e4a-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "neon-slots-c7e4a",
+    storageBucket: "neon-slots-c7e4a.firebasestorage.app",
+    messagingSenderId: "581546428803",
+    appId: "1:581546428803:web:cace7eded782a92b9d8eb6",
+    measurementId: "G-SP3PEH98L2"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+// ==================== 2. VERSCHLÜSSELTES ADMIN-PASSWORT (SHA-256) ====================
+// Dein Passwort steht hier NICHT im Klartext, sondern als kryptografischer Hash:
+const ADMIN_HASH = "3a89554b626c0c8d8f09c3b8e0d8c4d97b9f8d5a87a98d6e10b8d7f63a8b5901";
+
+async function sha256(text) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(text);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// ==================== 3. SPIEL-KONFIGURATION ====================
 const RANKS = {
     member:  { label: '👤 Member',            bonus: 1.00, cssClass: 'rank-member' },
     bronze:  { label: '🥉 Bronze Club',       bonus: 1.05, cssClass: 'rank-bronze' },
@@ -12,7 +37,6 @@ const RANKS = {
     emperor: { label: '⚡ Aurelia Emperor',   bonus: 1.50, cssClass: 'rank-emperor' }
 };
 
-// Symbole mit Gewichtung
 const symbols = [
     { key: 'cherry',  icon: '🍒', multiplier: 2,    weight: 42 },
     { key: 'lemon',   icon: '🍋', multiplier: 3,    weight: 32 },
@@ -23,37 +47,74 @@ const symbols = [
     { key: 'cosmic',  icon: '🌌', multiplier: 1000, weight: 0.2 }
 ];
 
-// ==================== DATENBANK (LocalStorage) ====================
-let users = JSON.parse(localStorage.getItem('neonSlotsUsers')) || [];
-let currentUserId = localStorage.getItem('neonSlotsCurrentUser') || null;
+// ==================== 4. LIVE CLOUD-SYNCHRONISATION ====================
+let usersMap = {};
 let userRigQueue = {};
+let currentUserId = localStorage.getItem('neonSlotsCurrentUser') || null;
+let lastBroadcastTimestamp = 0;
 
 let currentBet = 50;
 let isSpinning = false;
 
-// Migration älterer Accounts ohne Rang-Feld
-users.forEach(u => {
-    if (!u.rank) {
-        u.rank = u.vip ? 'royal' : 'member';
-    }
-});
-
-function saveUsers() {
-    localStorage.setItem('neonSlotsUsers', JSON.stringify(users));
+db.ref('users').on('value', (snapshot) => {
+    usersMap = snapshot.val() || {};
     updateUI();
     renderLeaderboard();
     renderAdminPlayers();
+});
+
+db.ref('rigs').on('value', (snapshot) => {
+    userRigQueue = snapshot.val() || {};
+    renderActiveRigs();
+});
+
+db.ref('broadcast').on('value', (snapshot) => {
+    const data = snapshot.val();
+    if (data && data.timestamp > lastBroadcastTimestamp) {
+        lastBroadcastTimestamp = data.timestamp;
+        showGlobalBanner(data.text, data.isWinner);
+    }
+});
+
+db.ref('logs').limitToLast(40).on('value', (snapshot) => {
+    const logsContainer = document.getElementById('admin-logs');
+    if (!logsContainer) return;
+    logsContainer.innerHTML = '';
+    const logsObj = snapshot.val() || {};
+    const entries = Object.values(logsObj).reverse();
+    entries.forEach(line => {
+        const div = document.createElement('div');
+        div.textContent = line;
+        logsContainer.appendChild(div);
+    });
+});
+
+function getUsersArray() {
+    return Object.values(usersMap);
 }
 
 function getCurrentUser() {
-    return users.find(u => u.id === currentUserId) || null;
+    return currentUserId ? (usersMap[currentUserId] || null) : null;
 }
 
 function getRankInfo(rankKey) {
     return RANKS[rankKey] || RANKS.member;
 }
 
-// ==================== AUTHENTIFIZIERUNG (LOGIN & REGISTER) ====================
+function addCloudLog(message) {
+    const time = new Date().toLocaleTimeString('de-DE');
+    db.ref('logs').push(`[${time}] ${message}`);
+}
+
+function pushGlobalBroadcast(text, isWinner = false) {
+    db.ref('broadcast').set({
+        text: text,
+        isWinner: isWinner,
+        timestamp: Date.now()
+    });
+}
+
+// ==================== 5. AUTHENTIFIZIERUNG (CLOUD LOGIN & REGISTER) ====================
 let authMode = 'login';
 
 const authModal = document.getElementById('auth-modal');
@@ -86,7 +147,7 @@ tabRegister.addEventListener('click', () => {
     authError.classList.add('hidden');
 });
 
-function handleAuthSubmit() {
+async function handleAuthSubmit() {
     const username = authUsernameInput.value.trim();
     const password = authPasswordInput.value.trim();
 
@@ -96,56 +157,75 @@ function handleAuthSubmit() {
         return;
     }
 
-    if (authMode === 'register') {
-        const exists = users.some(u => u.username.toLowerCase() === username.toLowerCase());
-        if (exists) {
-            authError.textContent = '❌ Dieser Username ist bereits vergeben!';
-            authError.classList.remove('hidden');
-            return;
+    authSubmitBtn.disabled = true;
+
+    try {
+        const snapshot = await db.ref('users').once('value');
+        const allUsers = snapshot.val() || {};
+        const userList = Object.values(allUsers);
+
+        if (authMode === 'register') {
+            const exists = userList.some(u => u.username.toLowerCase() === username.toLowerCase());
+            if (exists) {
+                authError.textContent = '❌ Dieser Username ist bereits vergeben!';
+                authError.classList.remove('hidden');
+                authSubmitBtn.disabled = false;
+                return;
+            }
+
+            let maxNum = 0;
+            userList.forEach(u => {
+                if (u.idNumber && u.idNumber > maxNum) maxNum = u.idNumber;
+            });
+            const nextNumber = maxNum + 1;
+            const newId = `ID${nextNumber}`;
+
+            const newUser = {
+                idNumber: nextNumber,
+                id: newId,
+                username: username,
+                password: password,
+                coins: 2500,
+                rank: 'member',
+                banned: false
+            };
+
+            await db.ref(`users/${newId}`).set(newUser);
+            currentUserId = newId;
+            localStorage.setItem('neonSlotsCurrentUser', currentUserId);
+
+            authModal.classList.add('hidden');
+            addCloudLog(`🆕 Neues Mitglied registriert: ${newId} (${username})`);
+        } else {
+            const foundUser = userList.find(
+                u => u.username.toLowerCase() === username.toLowerCase() && u.password === password
+            );
+
+            if (!foundUser) {
+                authError.textContent = '❌ Falscher Username oder falsches Passwort!';
+                authError.classList.remove('hidden');
+                authSubmitBtn.disabled = false;
+                return;
+            }
+
+            currentUserId = foundUser.id;
+            localStorage.setItem('neonSlotsCurrentUser', currentUserId);
+            updateUI();
+            renderLeaderboard();
+            authModal.classList.add('hidden');
+            addCloudLog(`🔑 Login: ${foundUser.id} (${foundUser.username})`);
         }
 
-        const nextNumber = users.length + 1;
-        const newId = `ID${nextNumber}`;
-
-        const newUser = {
-            idNumber: nextNumber,
-            id: newId,
-            username: username,
-            password: password,
-            coins: 2500,
-            rank: 'member',
-            banned: false
-        };
-
-        users.push(newUser);
-        currentUserId = newId;
-        localStorage.setItem('neonSlotsCurrentUser', currentUserId);
-        saveUsers();
-
-        authModal.classList.add('hidden');
-        addLog(`🆕 Neues Mitglied registriert: ${newId} (${username})`);
-    } else {
-        const foundUser = users.find(
-            u => u.username.toLowerCase() === username.toLowerCase() && u.password === password
-        );
-
-        if (!foundUser) {
-            authError.textContent = '❌ Falscher Username oder falsches Passwort!';
-            authError.classList.remove('hidden');
-            return;
-        }
-
-        currentUserId = foundUser.id;
-        localStorage.setItem('neonSlotsCurrentUser', currentUserId);
-        updateUI();
-        renderLeaderboard();
-        authModal.classList.add('hidden');
-        addLog(`🔑 Login: ${foundUser.id} (${foundUser.username})`);
+        authUsernameInput.value = '';
+        authPasswordInput.value = '';
+        authError.classList.add('hidden');
+    } catch (err) {
+        authError.textContent = '❌ Verbindungsfehler zur Cloud-Datenbank!';
+        authError.classList.remove('hidden');
+        console.error(err);
     }
 
-    authUsernameInput.value = '';
-    authPasswordInput.value = '';
-    authError.classList.add('hidden');
+    authSubmitBtn.disabled = false;
 }
 
 authSubmitBtn.addEventListener('click', handleAuthSubmit);
@@ -155,14 +235,14 @@ authPasswordInput.addEventListener('keydown', (e) => {
 
 document.getElementById('logout-btn').addEventListener('click', () => {
     const user = getCurrentUser();
-    if (user) addLog(`🚪 Logout: ${user.id} (${user.username})`);
+    if (user) addCloudLog(`🚪 Logout: ${user.id} (${user.username})`);
     currentUserId = null;
     localStorage.removeItem('neonSlotsCurrentUser');
     updateUI();
     authModal.classList.remove('hidden');
 });
 
-// ==================== UI & LIVE LEADERBOARD ====================
+// ==================== 6. UI & LIVE LEADERBOARD ====================
 const balanceEl = document.getElementById('balance');
 const lastWinEl = document.getElementById('last-win');
 const lastWinBox = document.querySelector('.last-win-box');
@@ -212,8 +292,7 @@ function renderLeaderboard() {
 
     tbody.innerHTML = '';
 
-    // Alle nicht-gebannten Spieler nach Coins absteigend sortieren
-    const sortedPlayers = [...users]
+    const sortedPlayers = getUsersArray()
         .filter(u => !u.banned)
         .sort((a, b) => b.coins - a.coins);
 
@@ -246,7 +325,7 @@ function renderLeaderboard() {
     });
 }
 
-// ==================== RUNDUNG & EINSATZ ====================
+// ==================== 7. RUNDUNG & EINSATZ ====================
 function roundBetAmount(value) {
     let num = parseInt(value, 10);
     if (isNaN(num) || num < 10) return 10;
@@ -271,7 +350,22 @@ betInputEl.addEventListener('keydown', (e) => {
     }
 });
 
-// ==================== GEWICHTETER ZUFALL & ADMIN-TRIGGER ====================
+// ==================== 8. SLOT LOGIK & HEBEL ANIMATION ====================
+const leverAssembly = document.getElementById('lever-assembly');
+const leverArm = document.getElementById('lever-arm');
+
+function pullLeverAnimation() {
+    if (!leverArm) return;
+    leverArm.classList.add('pulled');
+    setTimeout(() => leverArm.classList.remove('pulled'), 450);
+}
+
+if (leverAssembly) {
+    leverAssembly.addEventListener('click', () => {
+        if (!spinBtn.disabled) spinBtn.click();
+    });
+}
+
 function getWeightedRandomSymbol() {
     const totalWeight = symbols.reduce((sum, s) => sum + s.weight, 0);
     let random = Math.random() * totalWeight;
@@ -285,17 +379,16 @@ function getWeightedRandomSymbol() {
 function generateSpinResults(user) {
     if (userRigQueue[user.id]) {
         const riggedOutcome = userRigQueue[user.id];
-        delete userRigQueue[user.id];
-        renderActiveRigs();
+        db.ref(`rigs/${user.id}`).remove();
 
         if (riggedOutcome === 'lose') {
-            addLog(`💀 Programmierte Niete für ${user.id} (${user.username}) ausgeführt.`);
+            addCloudLog(`💀 Programmierte Niete für ${user.id} (${user.username}) ausgeführt.`);
             return [symbols[0], symbols[1], symbols[2]];
         }
 
         const targetSym = symbols.find(s => s.key === riggedOutcome);
         if (targetSym) {
-            addLog(`⚡ Programmierter Hit (${targetSym.icon} ${targetSym.multiplier}x) für ${user.id} ausgelöst!`);
+            addCloudLog(`⚡ Programmierter Hit (${targetSym.icon} ${targetSym.multiplier}x) für ${user.id} ausgelöst!`);
             return [targetSym, targetSym, targetSym];
         }
     }
@@ -303,7 +396,6 @@ function generateSpinResults(user) {
     return [getWeightedRandomSymbol(), getWeightedRandomSymbol(), getWeightedRandomSymbol()];
 }
 
-// ==================== SPIN ABLAUF & WALZEN-ANIMATION ====================
 spinBtn.addEventListener('click', () => {
     if (isSpinning) return;
 
@@ -327,16 +419,18 @@ spinBtn.addEventListener('click', () => {
         return;
     }
 
+    pullLeverAnimation();
     isSpinning = true;
     spinBtn.disabled = true;
     betInputEl.disabled = true;
-    user.coins -= currentBet;
-    saveUsers();
+
+    const newBalanceAfterBet = user.coins - currentBet;
+    db.ref(`users/${user.id}/coins`).set(newBalanceAfterBet);
 
     slotCard.classList.remove('shake');
     statusEl.classList.remove('status-win');
     statusEl.textContent = 'Walzen drehen...';
-    addLog(`🎰 ${user.id} (${user.username}) setzt ${currentBet} 🪙`);
+    addCloudLog(`🎰 ${user.id} (${user.username}) setzt ${currentBet} 🪙`);
 
     reels.forEach(reel => {
         reel.classList.remove('landed', 'win-glow');
@@ -381,7 +475,6 @@ function updateLastWin(amount) {
     else lastWinBox.classList.remove('highlight-win');
 }
 
-// ==================== GEWINN-PRÜFUNG & RIESEN ANIMATION ====================
 function checkWin(results) {
     const [r1, r2, r3] = results;
     const user = getCurrentUser();
@@ -393,8 +486,7 @@ function checkWin(results) {
 
     if (r1.icon === r2.icon && r2.icon === r3.icon) {
         const winAmount = Math.round(currentBet * r1.multiplier * rankBonus);
-        user.coins += winAmount;
-        saveUsers();
+        db.ref(`users/${user.id}/coins`).set(user.coins + winAmount);
         updateLastWin(winAmount);
 
         reels.forEach(r => r.classList.add('win-glow'));
@@ -402,19 +494,18 @@ function checkWin(results) {
 
         statusEl.classList.add('status-win');
         statusEl.textContent = `🎉 ${r1.multiplier}x TREFFER! ${bonusPercent > 0 ? `(+${bonusPercent}% Rang-Bonus) ` : ''}Gewinn: ${winAmount.toLocaleString('de-DE')} 🪙!`;
-        addLog(`🎉 ${r1.multiplier}x GEWINN für ${user.id} (${user.username}): +${winAmount} 🪙 (${r1.icon}${r2.icon}${r3.icon})`);
+        addCloudLog(`🎉 ${r1.multiplier}x GEWINN für ${user.id} (${user.username}): +${winAmount} 🪙 (${r1.icon}${r2.icon}${r3.icon})`);
 
         if (r1.multiplier >= 15) {
             triggerMegaWinAnimation(user, r1, winAmount);
-            showGlobalBanner(
+            pushGlobalBroadcast(
                 `🏆 MEGA-GEWINNER: [${rankInfo.label}] ${user.username} (${user.id}) hat ${r1.icon}${r2.icon}${r3.icon} (${r1.multiplier}x) gehittet und ${winAmount.toLocaleString('de-DE')} 🪙 gewonnen!`,
                 true
             );
         }
     } else if (r1.icon === r2.icon || r2.icon === r3.icon || r1.icon === r3.icon) {
         const smallWin = Math.floor(currentBet * 0.5 * rankBonus);
-        user.coins += smallWin;
-        saveUsers();
+        db.ref(`users/${user.id}/coins`).set(user.coins + smallWin);
         updateLastWin(smallWin);
         statusEl.classList.add('status-win');
         statusEl.textContent = `✨ 2 Gleiche! Sie erhalten ${smallWin.toLocaleString('de-DE')} 🪙 zurück.`;
@@ -495,7 +586,7 @@ document.getElementById('close-broadcast').addEventListener('click', () => {
     document.getElementById('broadcast-banner').classList.add('hidden');
 });
 
-// ==================== ADMIN KONSOLE LOGIK ====================
+// ==================== 9. EXECUTIVE ADMIN KONSOLE (HASH-GESICHERT) ====================
 const loginModal = document.getElementById('admin-login-modal');
 const dashboardModal = document.getElementById('admin-dashboard-modal');
 const passInput = document.getElementById('admin-password-input');
@@ -519,13 +610,14 @@ document.addEventListener('keydown', (e) => {
 document.getElementById('close-login-modal').addEventListener('click', () => loginModal.classList.add('hidden'));
 document.getElementById('close-dashboard-modal').addEventListener('click', () => dashboardModal.classList.add('hidden'));
 
-function checkAdminLogin() {
-    if (passInput.value === ADMIN_PASSWORD) {
+async function checkAdminLogin() {
+    const enteredHash = await sha256(passInput.value);
+    if (enteredHash === ADMIN_HASH) {
         loginModal.classList.add('hidden');
         dashboardModal.classList.remove('hidden');
         renderAdminPlayers();
         renderActiveRigs();
-        addLog('🔓 Executive Admin Konsole entsperrt.');
+        addCloudLog('🔓 Executive Admin Konsole entsperrt.');
     } else {
         loginError.classList.remove('hidden');
     }
@@ -539,10 +631,9 @@ passInput.addEventListener('keydown', (e) => {
 function findPlayerByIdInput(rawInput) {
     const cleaned = rawInput.trim().toUpperCase();
     const formattedId = cleaned.startsWith('ID') ? cleaned : `ID${cleaned}`;
-    return users.find(u => u.id === formattedId);
+    return usersMap[formattedId] || null;
 }
 
-// Coins geben / abziehen / setzen per ID
 function modifyCoinsById(action) {
     const rawId = document.getElementById('target-id-input').value;
     const amount = parseInt(document.getElementById('admin-coin-amount').value, 10);
@@ -558,31 +649,31 @@ function modifyCoinsById(action) {
         return;
     }
 
+    let updatedCoins = targetUser.coins;
     if (action === 'give') {
-        targetUser.coins += amount;
-        addLog(`💰 Admin gab ${targetUser.id} (${targetUser.username}) +${amount} 🪙.`);
+        updatedCoins += amount;
+        addCloudLog(`💰 Admin gab ${targetUser.id} (${targetUser.username}) +${amount} 🪙.`);
     } else if (action === 'remove') {
-        targetUser.coins = Math.max(0, targetUser.coins - amount);
-        addLog(`💸 Admin zog ${targetUser.id} (${targetUser.username}) -${amount} 🪙 ab.`);
+        updatedCoins = Math.max(0, updatedCoins - amount);
+        addCloudLog(`💸 Admin zog ${targetUser.id} (${targetUser.username}) -${amount} 🪙 ab.`);
     } else if (action === 'set') {
-        targetUser.coins = amount;
-        addLog(`⚖️ Admin setzte ${targetUser.id} (${targetUser.username}) auf ${amount} 🪙.`);
+        updatedCoins = amount;
+        addCloudLog(`⚖️ Admin setzte ${targetUser.id} (${targetUser.username}) auf ${amount} 🪙.`);
     }
 
-    saveUsers();
+    db.ref(`users/${targetUser.id}/coins`).set(updatedCoins);
 }
 
 document.getElementById('admin-give-coins').addEventListener('click', () => modifyCoinsById('give'));
 document.getElementById('admin-remove-coins').addEventListener('click', () => modifyCoinsById('remove'));
 document.getElementById('admin-set-coins').addEventListener('click', () => modifyCoinsById('set'));
 
-// Exklusiven Rang per ID vergeben
 document.getElementById('admin-set-rank-btn').addEventListener('click', () => {
     const rawId = document.getElementById('target-id-input').value;
     const selectedRank = document.getElementById('admin-rank-select').value;
 
     if (!rawId) {
-        alert('Bitte oben eine Ziel-ID eingeben (z. B. ID1) oder rechts in der Liste auf "ID wählen" klicken!');
+        alert('Bitte oben eine Ziel-ID eingeben (z. B. ID1)!');
         return;
     }
 
@@ -592,25 +683,25 @@ document.getElementById('admin-set-rank-btn').addEventListener('click', () => {
         return;
     }
 
-    targetUser.rank = selectedRank;
     const rankInfo = getRankInfo(selectedRank);
-    saveUsers();
-    addLog(`🎖️ Rang von ${targetUser.id} (${targetUser.username}) geändert auf: ${rankInfo.label}`);
+    db.ref(`users/${targetUser.id}/rank`).set(selectedRank);
+    addCloudLog(`🎖️ Rang von ${targetUser.id} (${targetUser.username}) geändert auf: ${rankInfo.label}`);
 });
 
-// Coin-Rain an ALLE
 document.getElementById('admin-rain-btn').addEventListener('click', () => {
     const amount = parseInt(document.getElementById('rain-amount-input').value, 10);
-    if (isNaN(amount) || amount <= 0 || users.length === 0) return;
+    const userList = getUsersArray();
+    if (isNaN(amount) || amount <= 0 || userList.length === 0) return;
 
-    users.forEach(u => {
-        if (!u.banned) u.coins += amount;
+    userList.forEach(u => {
+        if (!u.banned) {
+            db.ref(`users/${u.id}/coins`).set(u.coins + amount);
+        }
     });
-    saveUsers();
-    addLog(`🌧️ COIN-RAIN! Alle (${users.length}) Spieler erhielten +${amount} 🪙!`);
+    addCloudLog(`🌧️ COIN-RAIN! Alle (${userList.length}) Spieler erhielten +${amount} 🪙!`);
+    pushGlobalBroadcast(`🌧️ ADMIN COIN-RAIN! Alle Spieler haben soeben +${amount.toLocaleString('de-DE')} 🪙 geschenkt bekommen!`, true);
 });
 
-// Gezielten Spin für bestimmten User programmieren
 document.getElementById('trigger-user-spin-btn').addEventListener('click', () => {
     const rawId = document.getElementById('rig-user-id-input').value;
     const outcome = document.getElementById('rig-outcome-select').value;
@@ -626,13 +717,13 @@ document.getElementById('trigger-user-spin-btn').addEventListener('click', () =>
         return;
     }
 
-    userRigQueue[targetUser.id] = outcome;
-    renderActiveRigs();
-    addLog(`🎯 Nächster Spin für ${targetUser.id} (${targetUser.username}) auf [${outcome.toUpperCase()}] programmiert!`);
+    db.ref(`rigs/${targetUser.id}`).set(outcome);
+    addCloudLog(`🎯 Nächster Spin für ${targetUser.id} (${targetUser.username}) auf [${outcome.toUpperCase()}] programmiert!`);
 });
 
 function renderActiveRigs() {
     const container = document.getElementById('active-rigs-list');
+    if (!container) return;
     container.innerHTML = '';
     const entries = Object.entries(userRigQueue);
 
@@ -648,13 +739,14 @@ function renderActiveRigs() {
     });
 }
 
-// Spielerliste in der Admin-Konsole rendern
 function renderAdminPlayers() {
     const listContainer = document.getElementById('player-list-container');
-    document.getElementById('total-users-count').textContent = users.length;
+    if (!listContainer) return;
+    const userList = getUsersArray();
+    document.getElementById('total-users-count').textContent = userList.length;
     listContainer.innerHTML = '';
 
-    users.forEach(user => {
+    userList.forEach(user => {
         const rankInfo = getRankInfo(user.rank);
         const item = document.createElement('div');
         item.className = `player-item ${user.banned ? 'banned' : ''}`;
@@ -682,62 +774,21 @@ window.selectIdForAdmin = function(id) {
 };
 
 window.toggleBan = function(id) {
-    const user = users.find(u => u.id === id);
+    const user = usersMap[id];
     if (user) {
-        user.banned = !user.banned;
-        saveUsers();
-        addLog(`${user.banned ? '🚫' : '✅'} Account ${user.id} (${user.username}) wurde ${user.banned ? 'gesperrt' : 'entsperrt'}.`);
+        const newStatus = !user.banned;
+        db.ref(`users/${id}/banned`).set(newStatus);
+        addCloudLog(`${newStatus ? '🚫' : '✅'} Account ${user.id} (${user.username}) wurde ${newStatus ? 'gesperrt' : 'entsperrt'}.`);
     }
 };
 
-// Manueller Broadcast Banner
 document.getElementById('send-broadcast-btn').addEventListener('click', () => {
     const text = document.getElementById('admin-broadcast-input').value.trim();
     if (!text) return;
-    showGlobalBanner(`📢 ADMIN NACHRICHT: ${text}`, false);
-    addLog(`📢 Broadcast gesendet: "${text}"`);
+    pushGlobalBroadcast(`📢 ADMIN NACHRICHT: ${text}`, false);
+    addCloudLog(`📢 Broadcast gesendet: "${text}"`);
 });
-
-// Live Logs
-function addLog(message) {
-    const logsContainer = document.getElementById('admin-logs');
-    const time = new Date().toLocaleTimeString('de-DE');
-    const entry = document.createElement('div');
-    entry.textContent = `[${time}] ${message}`;
-    logsContainer.prepend(entry);
-}
 
 document.getElementById('clear-logs-btn').addEventListener('click', () => {
-    document.getElementById('admin-logs').innerHTML = '';
-});
-
-// Initialisierung beim Start
-updateUI();
-renderLeaderboard();
-renderActiveRigs();
-addLog('🚀 AURELIA ROYALE Engine gestartet.');
-// ==================== EINARMIGER BANDIT HEBEL ANIMATION ====================
-const leverAssembly = document.getElementById('lever-assembly');
-const leverArm = document.getElementById('lever-arm');
-
-function pullLeverAnimation() {
-    if (!leverArm) return;
-    leverArm.classList.add('pulled');
-    setTimeout(() => {
-        leverArm.classList.remove('pulled');
-    }, 450);
-}
-
-// Wenn man direkt auf den roten Hebel klickt -> Spin auslösen
-if (leverAssembly) {
-    leverAssembly.addEventListener('click', () => {
-        if (!spinBtn.disabled) {
-            spinBtn.click();
-        }
-    });
-}
-
-// Hebel auch animieren, wenn man auf den Button klickt
-spinBtn.addEventListener('click', () => {
-    pullLeverAnimation();
+    db.ref('logs').remove();
 });
