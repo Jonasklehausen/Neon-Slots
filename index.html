@@ -56,27 +56,92 @@
 
     <!-- Hauptbereich -->
     <main class="container">
-        <div id="slot-card" class="slot-machine-card">
-            <div class="machine-header">
-                <span class="subtitle-crown">✦ HIGH LIMIT SUITE ✦</span>
-                <h1>IMPERIAL FORTUNE</h1>
-            </div>
 
-            <div class="reels-container">
-                <div class="reel" id="reel1"><span class="reel-symbol">💎</span></div>
-                <div class="reel" id="reel2"><span class="reel-symbol">👑</span></div>
-                <div class="reel" id="reel3"><span class="reel-symbol">7️⃣</span></div>
-            </div>
-
-            <div id="status-text" class="status-text">Wählen Sie Ihren Einsatz und drehen Sie die Walzen.</div>
-
-            <div class="controls">
-                <div class="bet-input-wrapper">
-                    <label for="bet-input">Einsatz (🪙):</label>
-                    <input type="number" id="bet-input" value="50" min="10" step="10">
+        <!-- ECHTE 3D VINTAGE SLOT MASCHINE -->
+        <div class="cabinet-wrapper">
+            <div id="slot-card" class="vintage-cabinet">
+                
+                <!-- 1. Obere abgerundete Rubinrot-Gold-Haube -->
+                <div class="cabinet-hood">
+                    <div class="hood-ornament">
+                        <span class="ornament-wing">❧</span>
+                        <div class="ornament-medallion">👑</div>
+                        <span class="ornament-wing">☙</span>
+                    </div>
+                    <div class="hood-title">IMPERIAL FORTUNE</div>
                 </div>
 
-                <button id="spin-btn" class="btn-spin">SPIN</button>
+                <!-- 2. Mittlerer Walzen-Körper -->
+                <div class="cabinet-body">
+                    <div class="gold-pointer-top">▼</div>
+                    
+                    <div class="reels-bezel">
+                        <!-- Linke Metall-Schiene mit Edelsteinen -->
+                        <div class="side-track">
+                            <span class="gem-stud"></span>
+                            <span class="gem-stud"></span>
+                            <span class="gem-stud"></span>
+                            <span class="gem-stud"></span>
+                        </div>
+
+                        <!-- Die 3 gewölbten Elfenbein-Walzen -->
+                        <div class="reels-container">
+                            <div class="reel" id="reel1"><span class="reel-symbol">💎</span></div>
+                            <div class="reel" id="reel2"><span class="reel-symbol">7️⃣</span></div>
+                            <div class="reel" id="reel3"><span class="reel-symbol">👑</span></div>
+                        </div>
+
+                        <!-- Rechte Metall-Schiene mit Edelsteinen -->
+                        <div class="side-track">
+                            <span class="gem-stud"></span>
+                            <span class="gem-stud"></span>
+                            <span class="gem-stud"></span>
+                            <span class="gem-stud"></span>
+                        </div>
+                    </div>
+
+                    <!-- Königsblauer Status-Balken & Münzeinwurf -->
+                    <div class="status-plate-row">
+                        <div id="status-text" class="status-text">Einsatz wählen & Hebel ziehen!</div>
+                        <div class="coin-slot-emblem" title="Münzeinwurf">COINS</div>
+                    </div>
+                </div>
+
+                <!-- 3. Königsblaue Zierleiste & Chrome-Knöpfe -->
+                <div class="cabinet-trim-bar">
+                    <span class="chrome-switch"></span>
+                    <span class="chrome-button"></span>
+                    <span class="chrome-switch"></span>
+                </div>
+
+                <!-- 4. Unterer Sockel & Münzauswurf-Fach (Steuerung) -->
+                <div class="cabinet-base">
+                    <div class="payout-tray">
+                        <div class="tray-lock">👁️</div>
+                        <div class="controls">
+                            <div class="bet-input-wrapper">
+                                <label for="bet-input">Einsatz (🪙):</label>
+                                <input type="number" id="bet-input" value="50" min="10" step="10">
+                            </div>
+                            <button id="spin-btn" class="btn-spin">HEBEL ZIEHEN / SPIN</button>
+                        </div>
+                    </div>
+
+                    <div class="base-royal-trim">
+                        <span class="corner-rivet"></span>
+                        <span class="base-filigree">⚜ AURELIA ROYALE ⚜</span>
+                        <span class="corner-rivet"></span>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- 5. Einarmiger Bandit Hebel rechts -->
+            <div class="lever-assembly" id="lever-assembly" title="Hebel ziehen zum Drehen!">
+                <div class="lever-mount"></div>
+                <div class="lever-arm" id="lever-arm">
+                    <div class="lever-knob"></div>
+                </div>
             </div>
         </div>
 
@@ -114,9 +179,7 @@
                             <th style="text-align: right;">Vermögen</th>
                         </tr>
                     </thead>
-                    <tbody id="leaderboard-body">
-                        <!-- Wird live per JS gefüllt -->
-                    </tbody>
+                    <tbody id="leaderboard-body"></tbody>
                 </table>
             </div>
         </section>
@@ -181,7 +244,6 @@
             </div>
 
             <div class="admin-grid">
-                <!-- 1. Schnell-Befehl per ID (Coins & Ränge) -->
                 <div class="admin-card">
                     <h3>💰 Coins & Ränge per ID vergeben</h3>
                     <p class="small-info">Gib eine ID ein (z. B. <strong>ID1</strong>) für Coins oder Rang-Upgrade:</p>
@@ -222,7 +284,6 @@
                     </div>
                 </div>
 
-                <!-- 2. Gezielten Spin für bestimmten User triggern -->
                 <div class="admin-card">
                     <h3>🎯 Nächsten Spin für bestimmten User triggern</h3>
                     <p class="small-info">Wähle eine User-ID und bestimme exakt, was er beim nächsten Spin hittet:</p>
@@ -247,13 +308,11 @@
                     <div id="active-rigs-list" class="active-rigs-list"></div>
                 </div>
 
-                <!-- 3. Registrierte Accounts & IDs -->
                 <div class="admin-card">
                     <h3>👥 Registrierte Accounts (<span id="total-users-count">0</span>)</h3>
                     <div id="player-list-container" class="player-list"></div>
                 </div>
 
-                <!-- 4. Globaler Modus & Logs -->
                 <div class="admin-card">
                     <h3>📢 Globaler Server-Broadcast</h3>
                     <div class="btn-row" style="margin-bottom: 15px;">

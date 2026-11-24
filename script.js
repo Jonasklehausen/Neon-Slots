@@ -716,3 +716,28 @@ updateUI();
 renderLeaderboard();
 renderActiveRigs();
 addLog('🚀 AURELIA ROYALE Engine gestartet.');
+// ==================== EINARMIGER BANDIT HEBEL ANIMATION ====================
+const leverAssembly = document.getElementById('lever-assembly');
+const leverArm = document.getElementById('lever-arm');
+
+function pullLeverAnimation() {
+    if (!leverArm) return;
+    leverArm.classList.add('pulled');
+    setTimeout(() => {
+        leverArm.classList.remove('pulled');
+    }, 450);
+}
+
+// Wenn man direkt auf den roten Hebel klickt -> Spin auslösen
+if (leverAssembly) {
+    leverAssembly.addEventListener('click', () => {
+        if (!spinBtn.disabled) {
+            spinBtn.click();
+        }
+    });
+}
+
+// Hebel auch animieren, wenn man auf den Button klickt
+spinBtn.addEventListener('click', () => {
+    pullLeverAnimation();
+});
