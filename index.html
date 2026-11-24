@@ -235,6 +235,44 @@
             <div id="shop-items-container" class="shop-grid"></div>
         </div>
     </div>
+    <!-- ==================== PENNER-RETTUNGS & QUIZ MODAL ==================== -->
+    <div id="broke-quiz-modal" class="modal-overlay hidden">
+        <div class="modal-box" style="max-width: 500px; text-align: center;">
+            <!-- Schritt 1: Spott-Nachricht & Start-Knopf -->
+            <div id="broke-intro-view">
+                <div style="font-size: 3rem; margin-bottom: 8px;">🤡💸</div>
+                <h2 style="color: var(--gold-light); margin-bottom: 10px;">Hahaha du bist so ein Penner!</h2>
+                <p class="modal-desc" style="font-size: 0.98rem; line-height: 1.5; margin-bottom: 20px;">
+                    Du hast weniger als <strong>10 🪙</strong> auf dem Konto.<br>
+                    Beantworte <strong>5 Allgemeinwissens-Fragen</strong> richtig, um dir einen <strong>+250 🪙 Rettungs-Bonus</strong> zu verdienen!
+                </p>
+                <div class="btn-row" style="justify-content: center; gap: 10px;">
+                    <button id="start-broke-quiz-btn" class="btn-spin" type="button">🧠 Quiz starten (+250 🪙)</button>
+                    <button id="close-broke-modal-btn" class="btn-admin-secondary" type="button">Später</button>
+                </div>
+            </div>
+
+            <!-- Schritt 2: Das 5-Fragen-Quiz -->
+            <div id="broke-quiz-view" class="hidden">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <span id="quiz-progress-text" style="color: var(--gold-main); font-weight: 800; font-size: 0.9rem;">Frage 1 / 5</span>
+                    <span id="quiz-score-text" style="color: var(--text-muted); font-size: 0.85rem;">Richtig: 0</span>
+                </div>
+                <h3 id="quiz-question-text" style="color: #fff; font-size: 1.1rem; line-height: 1.4; margin-bottom: 18px; min-height: 52px;">
+                    Frage wird geladen...
+                </h3>
+                <div id="quiz-options-container" style="display: flex; flex-direction: column; gap: 10px;"></div>
+            </div>
+
+            <!-- Schritt 3: Ergebnis (Geschafft oder Verkackt) -->
+            <div id="broke-result-view" class="hidden">
+                <div id="quiz-result-icon" style="font-size: 3rem; margin-bottom: 8px;">❌</div>
+                <h2 id="quiz-result-title" style="color: var(--gold-light); margin-bottom: 10px;">Verkackt!</h2>
+                <p id="quiz-result-desc" class="modal-desc" style="margin-bottom: 20px;"></p>
+                <button id="quiz-retry-or-claim-btn" class="btn-spin" type="button">🔄 Nochmal versuchen</button>
+            </div>
+        </div>
+    </div>
 
     <!-- ==================== ADMIN DASHBOARD MODAL ==================== -->
     <div id="admin-dashboard-modal" class="modal-overlay hidden">

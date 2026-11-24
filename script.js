@@ -30,7 +30,6 @@ function initOrUnlockAudio() {
     return audioCtx;
 }
 
-// Entsperrt Audio sofort beim ersten Klick/Touch/Tastendruck auf GitHub Pages
 ['pointerdown', 'touchstart', 'click', 'keydown'].forEach(evt => {
     window.addEventListener(evt, () => {
         initOrUnlockAudio();
@@ -65,7 +64,6 @@ if (muteBtn) {
     });
 }
 
-// 1. Klassischer Hebel- & Slot-Maschinen-Sound
 function playLeverPullSound() {
     withReadyAudio((ctx) => {
         const now = ctx.currentTime;
@@ -99,7 +97,6 @@ function playLeverPullSound() {
     });
 }
 
-// Walzen-Einrast-Klick beim Stoppen
 function playReelStopSound(reelIndex) {
     withReadyAudio((ctx) => {
         const now = ctx.currentTime;
@@ -118,7 +115,6 @@ function playReelStopSound(reelIndex) {
     });
 }
 
-// 2. Niederlagen-Sound (sanft abfallender Zwei-Ton-Klang)
 function playLoseSound() {
     withReadyAudio((ctx) => {
         const now = ctx.currentTime;
@@ -141,7 +137,6 @@ function playLoseSound() {
     });
 }
 
-// Kleiner Gewinn (2 Gleiche oder 2x-5x)
 function playSmallWinSound() {
     withReadyAudio((ctx) => {
         const now = ctx.currentTime;
@@ -162,7 +157,6 @@ function playSmallWinSound() {
     });
 }
 
-// 3. Hauptgewinn-Sound (Royal Jackpot Fanfare + Münzregen-Glitzern ab 15x)
 function playJackpotFanfareSound() {
     withReadyAudio((ctx) => {
         const now = ctx.currentTime;
@@ -205,7 +199,6 @@ function playJackpotFanfareSound() {
     });
 }
 
-// 4. Server-Broadcast-Sound (Edler Club-Gong / Chime)
 function playBroadcastSound() {
     withReadyAudio((ctx) => {
         const now = ctx.currentTime;
@@ -241,6 +234,8 @@ const SUPER_ADMIN_ID = 'ID1';
 const AUTO_SPIN_MIN_COINS = 500;
 const PASSIVE_REWARD_COINS = 10;
 const PASSIVE_INTERVAL_SEC = 300; // 5 Minuten
+const BROKE_THRESHOLD_COINS = 10;
+const BROKE_QUIZ_REWARD = 250;
 
 const RANKS = {
     member:  { label: '👤 Member',            bonus: 1.00, cssClass: 'rank-member' },
@@ -302,13 +297,41 @@ const SHOP_ITEMS = [
 ];
 
 const symbols = [
-    { key: 'cherry',  icon: '🍒', multiplier: 2,    weight: 42 },
-    { key: 'lemon',   icon: '🍋', multiplier: 3,    weight: 32 },
-    { key: 'bell',    icon: '🔔', multiplier: 5,    weight: 16 },
-    { key: 'diamond', icon: '💎', multiplier: 15,   weight: 7 },
-    { key: 'seven',   icon: '7️⃣', multiplier: 50,   weight: 2.2 },
-    { key: 'crown',   icon: '👑', multiplier: 250,  weight: 0.6 },
-    { key: 'cosmic',  icon: '🌌', multiplier: 1000, weight: 0.2 }
+    { key: 'cherry',  icon: '🍒', multiplier: 2,    weight: 34 },
+    { key: 'lemon',   icon: '🍋', multiplier: 3,    weight: 28 },
+    { key: 'bell',    icon: '🔔', multiplier: 5,    weight: 18 },
+    { key: 'diamond', icon: '💎', multiplier: 15,   weight: 11 },
+    { key: 'seven',   icon: '7️⃣', multiplier: 50,   weight: 5.5 },
+    { key: 'crown',   icon: '👑', multiplier: 250,  weight: 2.5 },
+    { key: 'cosmic',  icon: '🌌', multiplier: 1000, weight: 1.0 }
+];
+
+// ==================== 3B. ALLGEMEINWISSEN QUIZ-POOL (24 FRAGEN) ====================
+const QUIZ_QUESTIONS_POOL = [
+    { q: "Welcher Planet ist der Sonne am nächsten?", options: ["Merkur", "Venus", "Mars", "Jupiter"], answer: 0 },
+    { q: "Wie viele Bundesländer hat Deutschland?", options: ["14", "15", "16", "17"], answer: 2 },
+    { q: "Was ist die Hauptstadt von Australien?", options: ["Sydney", "Melbourne", "Canberra", "Perth"], answer: 2 },
+    { q: "Welches chemische Element hat das Symbol 'Au'?", options: ["Silber", "Gold", "Aluminium", "Argon"], answer: 1 },
+    { q: "Wie viele Kontinente gibt es auf der Erde?", options: ["5", "6", "7", "8"], answer: 2 },
+    { q: "Wer malte die Mona Lisa?", options: ["Vincent van Gogh", "Pablo Picasso", "Leonardo da Vinci", "Michelangelo"], answer: 2 },
+    { q: "Wie viele Sekunden hat eine Stunde?", options: ["1.200", "2.400", "3.600", "6.000"], answer: 2 },
+    { q: "Welches ist das größte Säugetier der Welt?", options: ["Afrikanischer Elefant", "Blauwal", "Giraffe", "Weißer Hai"], answer: 1 },
+    { q: "In welchem Jahr fiel die Berliner Mauer?", options: ["1987", "1989", "1990", "1991"], answer: 1 },
+    { q: "Wie viele Zähne hat ein erwachsener Mensch normalerweise (inkl. Weisheitszähne)?", options: ["28", "30", "32", "34"], answer: 2 },
+    { q: "Welcher Ozean ist der größte der Erde?", options: ["Atlantik", "Indischer Ozean", "Pazifischer Ozean", "Arktischer Ozean"], answer: 2 },
+    { q: "Was ist die Hauptstadt von Japan?", options: ["Kyoto", "Osaka", "Tokio", "Hiroshima"], answer: 2 },
+    { q: "Wie viele Spieler stehen bei einem Fußballspiel pro Mannschaft auf dem Platz?", options: ["9", "10", "11", "12"], answer: 2 },
+    { q: "Welches Gas atmen Pflanzen hauptsächlich ein, um Photosynthese zu betreiben?", options: ["Sauerstoff", "Kohlendioxid", "Stickstoff", "Helium"], answer: 1 },
+    { q: "Wie viele Farben hat ein klassischer Regenbogen?", options: ["5", "6", "7", "8"], answer: 2 },
+    { q: "Welches Land hat die größte Fläche der Welt?", options: ["Kanada", "China", "USA", "Russland"], answer: 3 },
+    { q: "Was ergibt 12 × 12?", options: ["124", "144", "154", "164"], answer: 1 },
+    { q: "Welches Organ pumpt Blut durch den menschlichen Körper?", options: ["Lunge", "Leber", "Herz", "Niere"], answer: 2 },
+    { q: "Wie heißt der höchste Berg der Erde?", options: ["K2", "Zugspitze", "Mount Everest", "Kilimandscharo"], answer: 2 },
+    { q: "In welchem Land stehen die Pyramiden von Gizeh?", options: ["Mexiko", "Ägypten", "Peru", "Marokko"], answer: 1 },
+    { q: "Wie viele Tage hat ein Schaltjahr?", options: ["364", "365", "366", "367"], answer: 2 },
+    { q: "Welches Tier ist das schnellste Landtier der Welt?", options: ["Löwe", "Gepard", "Pferd", "Antilope"], answer: 1 },
+    { q: "Was ist das härteste natürliche Mineral der Welt?", options: ["Quarz", "Rubin", "Diamant", "Smaragd"], answer: 2 },
+    { q: "Wie heißt die Hauptstadt von Spanien?", options: ["Barcelona", "Sevilla", "Madrid", "Valencia"], answer: 2 }
 ];
 
 // ==================== 4. LIVE CLOUD-SYNCHRONISATION ====================
@@ -321,6 +344,7 @@ let currentBet = 50;
 let isSpinning = false;
 let isAutoSpinning = false;
 let passiveSecondsLeft = PASSIVE_INTERVAL_SEC;
+let brokePopupDismissedThisRound = false;
 
 db.ref('users').on('value', (snapshot) => {
     usersMap = snapshot.val() || {};
@@ -420,6 +444,163 @@ setInterval(() => {
         timerTextEl.textContent = `${mins}:${secs}`;
     }
 }, 1000);
+
+// ==================== 4C. PENNER-RETTUNGS & QUIZ LOGIK (< 10 COINS) ====================
+const brokeQuizModal = document.getElementById('broke-quiz-modal');
+const brokeIntroView = document.getElementById('broke-intro-view');
+const brokeQuizView = document.getElementById('broke-quiz-view');
+const brokeResultView = document.getElementById('broke-result-view');
+
+let activeQuizQuestions = [];
+let currentQuizIndex = 0;
+let currentQuizCorrectCount = 0;
+let quizAnswerLocked = false;
+
+function shuffleArray(array) {
+    const copy = [...array];
+    for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+    }
+    return copy;
+}
+
+function checkAndShowBrokePopup(forceOpen = false) {
+    const user = getCurrentUser();
+    if (!user || user.banned || isSpinning || !brokeQuizModal) return;
+
+    if (user.coins < BROKE_THRESHOLD_COINS) {
+        if (!forceOpen && brokePopupDismissedThisRound) return;
+        if (!brokeQuizModal.classList.contains('hidden')) return;
+
+        brokeIntroView.classList.remove('hidden');
+        brokeQuizView.classList.add('hidden');
+        brokeResultView.classList.add('hidden');
+        brokeQuizModal.classList.remove('hidden');
+    } else {
+        brokePopupDismissedThisRound = false;
+        brokeQuizModal.classList.add('hidden');
+    }
+}
+
+function startBrokeQuiz() {
+    activeQuizQuestions = shuffleArray(QUIZ_QUESTIONS_POOL).slice(0, 5);
+    currentQuizIndex = 0;
+    currentQuizCorrectCount = 0;
+    quizAnswerLocked = false;
+
+    brokeIntroView.classList.add('hidden');
+    brokeResultView.classList.add('hidden');
+    brokeQuizView.classList.remove('hidden');
+
+    renderCurrentQuizQuestion();
+}
+
+function renderCurrentQuizQuestion() {
+    const qObj = activeQuizQuestions[currentQuizIndex];
+    quizAnswerLocked = false;
+
+    document.getElementById('quiz-progress-text').textContent = `Frage ${currentQuizIndex + 1} / 5`;
+    document.getElementById('quiz-score-text').textContent = `Richtig: ${currentQuizCorrectCount}`;
+    document.getElementById('quiz-question-text').textContent = qObj.q;
+
+    const optionsContainer = document.getElementById('quiz-options-container');
+    optionsContainer.innerHTML = '';
+
+    qObj.options.forEach((optText, idx) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'mini-btn';
+        btn.style.cssText = 'width: 100%; padding: 12px 14px; font-size: 0.95rem; text-align: left; background: rgba(255,255,255,0.06); border: 1px solid rgba(212,175,55,0.3); color: #fff; border-radius: 10px; transition: all 0.2s;';
+        btn.textContent = `${['A', 'B', 'C', 'D'][idx]}. ${optText}`;
+        btn.addEventListener('click', () => handleQuizAnswer(idx, btn));
+        optionsContainer.appendChild(btn);
+    });
+}
+
+function handleQuizAnswer(selectedIndex, clickedBtn) {
+    if (quizAnswerLocked) return;
+    quizAnswerLocked = true;
+
+    const qObj = activeQuizQuestions[currentQuizIndex];
+    const allBtns = document.getElementById('quiz-options-container').querySelectorAll('button');
+    const isCorrect = selectedIndex === qObj.answer;
+
+    if (isCorrect) {
+        currentQuizCorrectCount++;
+        clickedBtn.style.background = 'rgba(16, 185, 129, 0.35)';
+        clickedBtn.style.borderColor = '#10b981';
+        playReelStopSound(2);
+    } else {
+        clickedBtn.style.background = 'rgba(239, 68, 68, 0.35)';
+        clickedBtn.style.borderColor = '#ef4444';
+        if (allBtns[qObj.answer]) {
+            allBtns[qObj.answer].style.background = 'rgba(16, 185, 129, 0.25)';
+            allBtns[qObj.answer].style.borderColor = '#10b981';
+        }
+        playLoseSound();
+    }
+
+    document.getElementById('quiz-score-text').textContent = `Richtig: ${currentQuizCorrectCount}`;
+
+    setTimeout(() => {
+        currentQuizIndex++;
+        if (currentQuizIndex < 5) {
+            renderCurrentQuizQuestion();
+        } else {
+            finishBrokeQuiz();
+        }
+    }, 850);
+}
+
+function finishBrokeQuiz() {
+    brokeQuizView.classList.add('hidden');
+    brokeResultView.classList.remove('hidden');
+
+    const iconEl = document.getElementById('quiz-result-icon');
+    const titleEl = document.getElementById('quiz-result-title');
+    const descEl = document.getElementById('quiz-result-desc');
+    const actionBtn = document.getElementById('quiz-retry-or-claim-btn');
+
+    if (currentQuizCorrectCount === 5) {
+        iconEl.textContent = '🎉🪙';
+        titleEl.textContent = 'Stark! Alle 5 Fragen richtig!';
+        descEl.innerHTML = `Du hast dir deinen <strong>+${BROKE_QUIZ_REWARD} 🪙 Rettungs-Bonus</strong> verdient. Viel Glück am Automaten!`;
+        actionBtn.textContent = `💰 +${BROKE_QUIZ_REWARD} 🪙 abholen & weiterspielen`;
+        playSmallWinSound();
+
+        actionBtn.onclick = () => {
+            const user = getCurrentUser();
+            if (user) {
+                const updatedCoins = (user.coins || 0) + BROKE_QUIZ_REWARD;
+                db.ref(`users/${user.id}/coins`).set(updatedCoins);
+                addCloudLog(`🧠 Rettungs-Quiz bestanden: ${user.id} (${user.username}) erhielt +${BROKE_QUIZ_REWARD} 🪙.`);
+            }
+            brokePopupDismissedThisRound = false;
+            brokeQuizModal.classList.add('hidden');
+        };
+    } else {
+        iconEl.textContent = '💀🤡';
+        titleEl.textContent = 'Verkackt!';
+        descEl.innerHTML = `Du hattest nur <strong>${currentQuizCorrectCount} von 5</strong> Fragen richtig.<br>Du kannst das Quiz so lange wiederholen, bis du alle 5 schaffst!`;
+        actionBtn.textContent = '🔄 Nochmal versuchen (Neue Fragen)';
+        playLoseSound();
+
+        actionBtn.onclick = () => {
+            startBrokeQuiz();
+        };
+    }
+}
+
+if (document.getElementById('start-broke-quiz-btn')) {
+    document.getElementById('start-broke-quiz-btn').addEventListener('click', startBrokeQuiz);
+}
+if (document.getElementById('close-broke-modal-btn')) {
+    document.getElementById('close-broke-modal-btn').addEventListener('click', () => {
+        brokePopupDismissedThisRound = true;
+        brokeQuizModal.classList.add('hidden');
+    });
+}
 
 // ==================== 5. AUTHENTIFIZIERUNG (CLOUD LOGIN & REGISTER) ====================
 let authMode = 'login';
@@ -626,12 +807,16 @@ function updateUI() {
 
         const shopBal = document.getElementById('shop-balance-display');
         if (shopBal) shopBal.textContent = user.coins.toLocaleString('de-DE');
+
+        // Prüfen, ob Spieler unter 10 Coins gefallen ist
+        checkAndShowBrokePopup(false);
     } else {
         profileBadge.classList.add('hidden');
         cornerBadge.classList.add('hidden');
         logoutBtn.classList.add('hidden');
         if (adminBtn) adminBtn.classList.add('hidden');
         if (dashboardModal) dashboardModal.classList.add('hidden');
+        if (brokeQuizModal) brokeQuizModal.classList.add('hidden');
         balanceEl.textContent = '0';
         authModal.classList.remove('hidden');
     }
@@ -887,9 +1072,13 @@ spinBtn.addEventListener('click', () => {
         stopAutoSpin();
         statusEl.classList.remove('status-win');
         statusEl.textContent = '❌ Nicht genug Guthaben für diesen Einsatz!';
+        if (user.coins < BROKE_THRESHOLD_COINS) {
+            checkAndShowBrokePopup(true);
+        }
         return;
     }
 
+    brokePopupDismissedThisRound = false;
     playLeverPullSound();
     pullLeverAnimation();
 
@@ -938,10 +1127,10 @@ spinBtn.addEventListener('click', () => {
             reel.classList.add('landed');
 
             if (index === reels.length - 1) {
-                checkWin(results);
                 isSpinning = false;
                 spinBtn.disabled = false;
                 betInputEl.disabled = false;
+                checkWin(results);
 
                 const freshUser = getCurrentUser();
                 if (isAutoSpinning) {
@@ -976,7 +1165,8 @@ function checkWin(results) {
 
     if (r1.icon === r2.icon && r2.icon === r3.icon) {
         const winAmount = Math.round(currentBet * r1.multiplier * rankBonus);
-        db.ref(`users/${user.id}/coins`).set(user.coins + winAmount);
+        const finalCoins = user.coins + winAmount;
+        db.ref(`users/${user.id}/coins`).set(finalCoins);
         updateLastWin(winAmount);
 
         reels.forEach(r => r.classList.add('win-glow'));
@@ -997,17 +1187,24 @@ function checkWin(results) {
             playSmallWinSound();
         }
     } else if (r1.icon === r2.icon || r2.icon === r3.icon || r1.icon === r3.icon) {
-        const smallWin = Math.floor(currentBet * 0.5 * rankBonus);
-        db.ref(`users/${user.id}/coins`).set(user.coins + smallWin);
+        const smallWin = Math.floor(currentBet * 0.75 * rankBonus);
+        const finalCoins = user.coins + smallWin;
+        db.ref(`users/${user.id}/coins`).set(finalCoins);
         updateLastWin(smallWin);
         playSmallWinSound();
         statusEl.classList.add('status-win');
         statusEl.textContent = `✨ 2 Gleiche! Sie erhalten ${smallWin.toLocaleString('de-DE')} 🪙 zurück.`;
+        if (finalCoins < BROKE_THRESHOLD_COINS) {
+            setTimeout(() => checkAndShowBrokePopup(true), 600);
+        }
     } else {
         playLoseSound();
         updateLastWin(0);
         statusEl.classList.remove('status-win');
         statusEl.textContent = 'Kein Treffer. Versuchen Sie es erneut.';
+        if (user.coins < BROKE_THRESHOLD_COINS) {
+            setTimeout(() => checkAndShowBrokePopup(true), 600);
+        }
     }
 }
 
