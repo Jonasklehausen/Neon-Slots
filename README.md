@@ -3,14 +3,14 @@
 # 👑 AURELIA ROYALE
 ### Private High-Roller Slot Casino & Executive Admin Suite
 
-[![Status](https://img.shields.io/badge/Status-Live-d4af37?style=for-the-badge)]()
+[![GitHub Repo](https://img.shields.io/badge/GitHub-Jonasklehausen%2FNeon--Slots-d4af37?style=for-the-badge&logo=github)](https://github.com/Jonasklehausen/Neon-Slots)
 [![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)]()
 [![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)]()
 [![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)]()
 
 *Ein luxuriöses Browser-Slot-Game im edlen Schwarz-Gold-Design mit 3D-Vintage-Automaten-Gehäuse, Account- & ID-System, Rängen, Live-Leaderboard und einem geschützten Admin-Control-Panel.*
 
-[🌐 Live Demo auf eigener Domain](https://deine-domain.de) · [🐞 Bug melden](../../issues) · [✨ Feature vorschlagen](../../issues)
+[📂 Repository ansehen](https://github.com/Jonasklehausen/Neon-Slots) · [🐞 Bug melden](https://github.com/Jonasklehausen/Neon-Slots/issues) · [✨ Feature vorschlagen](https://github.com/Jonasklehausen/Neon-Slots/issues)
 
 </div>
 
@@ -64,5 +64,5 @@ Zugänglich über den **`🔒 Admin`**-Button in der Navbar oder per Shortcut (*
 
 1. **Repository klonen:**
    ```bash
-   git clone [https://github.com/dein-username/aurelia-royale.git](https://github.com/dein-username/aurelia-royale.git)
-   cd aurelia-royale
+   git clone [https://github.com/Jonasklehausen/Neon-Slots.git](https://github.com/Jonasklehausen/Neon-Slots.git)
+   cd Neon-Slots
