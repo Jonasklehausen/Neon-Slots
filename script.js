@@ -1,4 +1,3 @@
-
 // ==================== 1. FIREBASE KONFIGURATION ====================
 const firebaseConfig = {
     apiKey: "AIzaSyC13VT3XZ0FycilSOg_OvU883pSjAQvPE8",
@@ -114,7 +113,7 @@ function pushGlobalBroadcast(text, isWinner = false) {
     });
 }
 
-// ==================== 5. AUTHENTIFIZIERUNG (CLOUD LOGIN & REGISTER) ====================
+// ==================== 5. AUTHENTIFIZIERUNG (CLOUD LOGIN & REGISTER MIT HASHING) ====================
 let authMode = 'login';
 
 const authModal = document.getElementById('auth-modal');
@@ -160,6 +159,8 @@ async function handleAuthSubmit() {
     authSubmitBtn.disabled = true;
 
     try {
+        const hashedPassword = await sha256(password);
+
         const snapshot = await db.ref('users').once('value');
         const allUsers = snapshot.val() || {};
         const userList = Object.values(allUsers);
@@ -184,7 +185,7 @@ async function handleAuthSubmit() {
                 idNumber: nextNumber,
                 id: newId,
                 username: username,
-                password: password,
+                password: hashedPassword,
                 coins: 2500,
                 rank: 'member',
                 banned: false
@@ -198,7 +199,7 @@ async function handleAuthSubmit() {
             addCloudLog(`🆕 Neues Mitglied registriert: ${newId} (${username})`);
         } else {
             const foundUser = userList.find(
-                u => u.username.toLowerCase() === username.toLowerCase() && u.password === password
+                u => u.username.toLowerCase() === username.toLowerCase() && u.password === hashedPassword
             );
 
             if (!foundUser) {
