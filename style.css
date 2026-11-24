@@ -1,12 +1,13 @@
 :root {
     --bg-dark: #050505;
-    --bg-card: #0c0b09;
-    --bg-elevated: #14120e;
-    --border-gold: rgba(212, 175, 55, 0.35);
-    --border-subtle: rgba(212, 175, 55, 0.18);
+    --bg-card: #0d0b08;
+    --bg-elevated: #17130d;
+    --border-gold: rgba(212, 175, 55, 0.45);
+    --border-subtle: rgba(212, 175, 55, 0.2);
     --gold-main: #d4af37;
-    --gold-light: #f7df8b;
-    --gold-dark: #9e7b18;
+    --gold-light: #ffe28a;
+    --gold-dark: #8c6a12;
+    --retro-red: #b71c1c;
     --text-main: #f7f3e8;
     --text-muted: #9e9378;
 }
@@ -19,10 +20,10 @@
 }
 
 body {
-    background: radial-gradient(circle at top, #1c1608 0%, #070605 55%, #030303 100%);
+    background: radial-gradient(circle at top, #211909 0%, #080705 55%, #030303 100%);
     color: var(--text-main);
     min-height: 100vh;
-    padding-bottom: 50px;
+    padding-bottom: 60px;
 }
 
 .hidden {
@@ -31,7 +32,7 @@ body {
 
 /* BROADCAST BANNER */
 .broadcast-banner {
-    background: linear-gradient(90deg, #1a1406, #2b2109, #1a1406);
+    background: linear-gradient(90deg, #1a1406, #2e230a, #1a1406);
     border-bottom: 1px solid var(--gold-main);
     color: var(--gold-light);
     padding: 10px 20px;
@@ -43,8 +44,7 @@ body {
 }
 
 .broadcast-banner.winner-announce {
-    background: linear-gradient(90deg, #3b2b06, #5e4409, #3b2b06);
-    box-shadow: 0 4px 20px rgba(212, 175, 55, 0.25);
+    background: linear-gradient(90deg, #3b2b06, #63480b, #3b2b06);
 }
 
 .close-banner-btn {
@@ -60,7 +60,7 @@ body {
     position: fixed;
     bottom: 14px;
     left: 14px;
-    background: rgba(12, 11, 9, 0.92);
+    background: rgba(13, 11, 8, 0.92);
     border: 1px solid var(--border-gold);
     color: var(--gold-light);
     padding: 7px 14px;
@@ -70,8 +70,7 @@ body {
     align-items: center;
     gap: 8px;
     z-index: 40;
-    backdrop-filter: blur(8px);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.7);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.75);
 }
 
 .pulse-dot {
@@ -84,9 +83,9 @@ body {
 
 /* TOP HEADER */
 .top-bar {
-    max-width: 1120px;
+    max-width: 980px;
     margin: 0 auto;
-    padding: 20px;
+    padding: 18px 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -102,11 +101,11 @@ body {
 
 .logo-crown {
     font-size: 2rem;
-    filter: drop-shadow(0 0 10px rgba(212, 175, 55, 0.5));
+    filter: drop-shadow(0 0 10px rgba(212, 175, 55, 0.55));
 }
 
 .brand-logo h1 {
-    font-size: 1.38rem;
+    font-size: 1.35rem;
     letter-spacing: 2px;
     background: linear-gradient(90deg, #fff1b8, var(--gold-main), #b88918);
     -webkit-background-clip: text;
@@ -161,8 +160,7 @@ body {
 
 .admin-trigger-btn:hover,
 .logout-btn:hover {
-    background: #1c180f;
-    box-shadow: 0 0 12px rgba(212, 175, 55, 0.25);
+    background: #1f1a10;
 }
 
 /* RANK PILLS */
@@ -194,107 +192,155 @@ body {
     margin-left: 4px;
 }
 
-/* MAIN LAYOUT */
-.main-layout {
-    max-width: 1120px;
-    margin: 10px auto 0;
-    padding: 0 20px;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 24px;
-    align-items: start;
+/* ZENTRIERTE BÜHNE FÜR DIE SLOT-MASCHINE */
+.center-stage {
+    max-width: 760px;
+    margin: 8px auto 0;
+    padding: 0 18px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 28px;
 }
 
-@media (max-width: 880px) {
-    .main-layout {
-        grid-template-columns: 1fr;
-    }
+/* RETRO VEGAS SLOT CABINET (GROSS & ZENTRIERT) */
+.retro-cabinet {
+    width: 100%;
+    background: linear-gradient(180deg, #1a140c 0%, #0c0a07 40%, #070604 100%);
+    border: 3px solid var(--gold-main);
+    border-radius: 34px 34px 22px 22px;
+    padding: 24px 28px 26px;
+    box-shadow:
+        0 25px 65px rgba(0, 0, 0, 0.9),
+        0 0 35px rgba(212, 175, 55, 0.18),
+        inset 0 0 30px rgba(212, 175, 55, 0.08);
+    position: relative;
 }
 
-/* LUXURY GOLD SLOT CARD */
-.slot-card {
-    background: linear-gradient(180deg, #12100c 0%, #080705 100%);
-    border: 2px solid var(--border-gold);
-    border-radius: 22px;
-    padding: 22px 24px 24px;
-    box-shadow: 0 22px 55px rgba(0, 0, 0, 0.85), inset 0 0 30px rgba(212, 175, 55, 0.06);
-    transition: all 0.3s ease;
-}
-
-.slot-crown-header {
-    text-align: center;
-    font-size: 0.75rem;
-    font-weight: 800;
-    letter-spacing: 3px;
-    color: var(--gold-main);
-    margin-bottom: 14px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid var(--border-subtle);
-}
-
-.slot-card.shake {
+.retro-cabinet.shake {
     animation: cardShake 0.4s ease;
 }
 
 @keyframes cardShake {
     0%, 100% { transform: translateX(0); }
-    25% { transform: translateX(-6px); }
-    75% { transform: translateX(6px); }
+    25% { transform: translateX(-7px); }
+    75% { transform: translateX(7px); }
 }
 
-.slot-header {
+/* RETRO MARQUEE TOP */
+.cabinet-marquee {
+    background: linear-gradient(180deg, #2e0909 0%, #170404 100%);
+    border: 2px solid var(--gold-main);
+    border-radius: 20px 20px 12px 12px;
+    padding: 12px 16px;
+    text-align: center;
+    margin-bottom: 18px;
+    box-shadow: inset 0 0 18px rgba(0, 0, 0, 0.85), 0 4px 16px rgba(212, 175, 55, 0.2);
+}
+
+.marquee-bulbs {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 6px;
+}
+
+.marquee-bulbs span {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--gold-light);
+    box-shadow: 0 0 8px var(--gold-light);
+    animation: bulbPulse 1.2s infinite alternate;
+}
+
+.marquee-bulbs span:nth-child(even) {
+    animation-delay: 0.6s;
+}
+
+@keyframes bulbPulse {
+    from { opacity: 0.45; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1.15); }
+}
+
+.marquee-title {
+    font-size: 1.35rem;
+    font-weight: 900;
+    letter-spacing: 3px;
+    color: var(--gold-light);
+    text-shadow: 0 0 12px rgba(212, 175, 55, 0.7);
+}
+
+.marquee-sub {
+    font-size: 0.72rem;
+    letter-spacing: 2.5px;
+    color: #d4b872;
+    margin-top: 2px;
+}
+
+/* DIGITALE RETRO-ANZEIGEN */
+.cabinet-displays {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 12px;
+    gap: 14px;
     margin-bottom: 20px;
 }
 
-.stat-box {
-    background: #070604;
-    border: 1px solid var(--border-gold);
-    border-radius: 14px;
+.digital-readout {
+    background: #040403;
+    border: 2px solid rgba(212, 175, 55, 0.45);
+    border-radius: 12px;
     padding: 12px 16px;
+    text-align: center;
+    box-shadow: inset 0 4px 12px rgba(0, 0, 0, 0.9);
 }
 
-.stat-label {
+.readout-label {
     font-size: 0.7rem;
-    letter-spacing: 1.2px;
+    letter-spacing: 1.5px;
     color: var(--text-muted);
     display: block;
     margin-bottom: 4px;
 }
 
-.stat-value {
-    font-size: 1.35rem;
-    font-weight: 800;
+.readout-value {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 1.55rem;
+    font-weight: 900;
     color: var(--gold-light);
+    text-shadow: 0 0 10px rgba(212, 175, 55, 0.4);
 }
 
 .last-win-box.highlight-win {
-    border-color: #ffd700;
-    box-shadow: 0 0 20px rgba(212, 175, 55, 0.35);
+    border-color: #ffe082;
+    box-shadow: 0 0 22px rgba(212, 175, 55, 0.45);
 }
 
-/* MACHINE REELS & GOLD LEVER */
-.machine-stage {
+/* WALZEN-GEHÄUSE & HEBEL */
+.cabinet-body {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 16px;
+    gap: 18px;
     margin-bottom: 18px;
+}
+
+.reels-bezel {
+    flex: 1;
+    background: linear-gradient(180deg, #b88918 0%, #f7df8b 50%, #8c6a12 100%);
+    padding: 6px;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.85);
 }
 
 .reels-frame {
     position: relative;
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
-    background: linear-gradient(180deg, #050504 0%, #0f0d09 50%, #050504 100%);
-    padding: 18px 16px;
-    border-radius: 18px;
-    border: 2px solid var(--gold-main);
-    box-shadow: inset 0 0 25px rgba(0, 0, 0, 0.9), 0 0 20px rgba(212, 175, 55, 0.15);
-    flex: 1;
+    gap: 14px;
+    background: #050504;
+    padding: 20px 18px;
+    border-radius: 15px;
+    box-shadow: inset 0 0 28px rgba(0, 0, 0, 0.95);
 }
 
 .payline-bar {
@@ -302,27 +348,30 @@ body {
     left: 10px;
     right: 10px;
     top: 50%;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.55), transparent);
+    height: 3px;
+    background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.75), transparent);
     pointer-events: none;
+    z-index: 2;
 }
 
 .reel {
-    background: linear-gradient(180deg, #080705 0%, #17140d 50%, #080705 100%);
-    border: 1px solid rgba(212, 175, 55, 0.35);
+    background: linear-gradient(180deg, #070605 0%, #1d1911 22%, #292317 50%, #1d1911 78%, #070605 100%);
+    border: 2px solid rgba(212, 175, 55, 0.45);
     border-radius: 12px;
-    height: 108px;
+    height: 138px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 3.1rem;
+    font-size: 4.1rem;
     user-select: none;
-    box-shadow: inset 0 8px 16px rgba(0, 0, 0, 0.85), inset 0 -8px 16px rgba(0, 0, 0, 0.85);
+    box-shadow:
+        inset 0 14px 20px rgba(0, 0, 0, 0.9),
+        inset 0 -14px 20px rgba(0, 0, 0, 0.9);
     transition: transform 0.2s, box-shadow 0.2s;
 }
 
 .reel.spinning .reel-symbol {
-    filter: blur(1.5px);
+    filter: blur(1.8px);
     transform: scale(0.92);
 }
 
@@ -331,19 +380,19 @@ body {
 }
 
 .reel.win-glow {
-    border-color: #ffe082;
-    box-shadow: 0 0 25px rgba(212, 175, 55, 0.75);
+    border-color: #fff0b3;
+    box-shadow: 0 0 28px rgba(212, 175, 55, 0.85);
 }
 
 @keyframes reelBounce {
-    0% { transform: scale(1.1); }
+    0% { transform: scale(1.12); }
     100% { transform: scale(1); }
 }
 
-/* GOLD LEVER */
+/* RETRO BANDIT HEBEL RECHTS */
 .lever-assembly {
-    width: 30px;
-    height: 118px;
+    width: 36px;
+    height: 145px;
     position: relative;
     cursor: pointer;
     display: flex;
@@ -351,19 +400,20 @@ body {
     justify-content: center;
 }
 
-.lever-base {
-    width: 24px;
-    height: 38px;
-    background: linear-gradient(180deg, #2b2414, #141008);
-    border-radius: 8px;
-    border: 1px solid var(--gold-main);
+.lever-mount {
+    width: 28px;
+    height: 46px;
+    background: linear-gradient(180deg, #382e18, #141008);
+    border-radius: 10px;
+    border: 2px solid var(--gold-main);
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.8);
 }
 
 .lever-arm {
     position: absolute;
-    bottom: 26px;
-    width: 8px;
-    height: 76px;
+    bottom: 32px;
+    width: 10px;
+    height: 94px;
     background: linear-gradient(90deg, #8c6d1f, #f7df8b, #8c6d1f);
     border-radius: 6px;
     transform-origin: bottom center;
@@ -371,86 +421,87 @@ body {
 }
 
 .lever-arm.pulled {
-    transform: rotateX(65deg) scaleY(0.45);
+    transform: rotateX(68deg) scaleY(0.45);
 }
 
 .lever-knob {
-    width: 24px;
-    height: 24px;
+    width: 30px;
+    height: 30px;
     border-radius: 50%;
-    background: radial-gradient(circle at 30% 30%, #ffe082, #b88918);
-    border: 1px solid #fff2c2;
+    background: radial-gradient(circle at 30% 30%, #ff5252, #8e0000);
+    border: 2px solid var(--gold-light);
     position: absolute;
-    top: -12px;
-    left: -8px;
-    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.55);
+    top: -15px;
+    left: -10px;
+    box-shadow: 0 4px 14px rgba(183, 28, 28, 0.7);
 }
 
-/* STATUS BANNER */
+/* STATUS DISPLAY */
 .status-banner {
     text-align: center;
-    padding: 11px;
+    padding: 12px;
     border-radius: 12px;
-    background: #080705;
-    border: 1px solid var(--border-subtle);
-    font-weight: 600;
-    font-size: 0.94rem;
+    background: #060504;
+    border: 1px solid var(--border-gold);
+    font-weight: 700;
+    font-size: 0.96rem;
+    letter-spacing: 0.5px;
     margin-bottom: 18px;
     color: var(--text-muted);
 }
 
 .status-banner.status-win {
-    background: rgba(212, 175, 55, 0.16);
+    background: rgba(212, 175, 55, 0.18);
     color: var(--gold-light);
-    border: 1px solid var(--gold-main);
+    border-color: #ffe082;
 }
 
 /* CONTROLS */
 .controls-area {
     display: flex;
-    gap: 12px;
+    gap: 14px;
     align-items: stretch;
 }
 
 .bet-control {
-    background: #080705;
-    border: 1px solid var(--border-gold);
+    background: #060504;
+    border: 2px solid var(--border-gold);
     border-radius: 14px;
-    padding: 8px 14px;
+    padding: 10px 16px;
     display: flex;
     flex-direction: column;
     justify-content: center;
-    min-width: 145px;
+    min-width: 165px;
 }
 
 .bet-control label {
-    font-size: 0.68rem;
+    font-size: 0.7rem;
     color: var(--gold-main);
     letter-spacing: 0.8px;
-    margin-bottom: 2px;
+    margin-bottom: 3px;
 }
 
 .bet-control input {
     background: transparent;
     border: none;
     color: var(--gold-light);
-    font-size: 1.2rem;
-    font-weight: 800;
+    font-size: 1.3rem;
+    font-weight: 900;
     width: 100%;
     outline: none;
 }
 
 .spin-btn {
     flex: 1;
-    border: 1px solid #fff0b3;
+    border: 2px solid #fff0b3;
     border-radius: 14px;
-    background: linear-gradient(180deg, #f7df8b 0%, #d4af37 55%, #9e7b18 100%);
+    background: linear-gradient(180deg, #ffe28a 0%, #d4af37 55%, #9e7b18 100%);
     color: #090806;
-    font-size: 1.15rem;
+    font-size: 1.25rem;
     font-weight: 900;
     letter-spacing: 1.5px;
     cursor: pointer;
-    box-shadow: 0 8px 25px rgba(212, 175, 55, 0.35);
+    box-shadow: 0 8px 25px rgba(212, 175, 55, 0.38);
     transition: transform 0.15s, filter 0.15s;
 }
 
@@ -464,46 +515,46 @@ body {
     cursor: not-allowed;
 }
 
-/* SUB CONTROLS (AUTO SPIN & SHOP) */
+/* SUB CONTROLS */
 .sub-controls-row {
     display: flex;
-    gap: 10px;
+    gap: 12px;
     margin-top: 12px;
     flex-wrap: wrap;
 }
 
 .gold-outline-btn {
     flex: 1;
-    padding: 10px 14px;
+    padding: 11px 16px;
     border-radius: 12px;
     border: 1px solid var(--border-gold);
     background: #0d0b08;
     color: var(--gold-light);
     font-weight: 700;
-    font-size: 0.85rem;
+    font-size: 0.88rem;
     cursor: pointer;
     transition: 0.2s;
 }
 
 .gold-outline-btn:hover {
-    background: #1b170f;
+    background: #1d180f;
 }
 
 .gold-outline-btn.auto-active {
-    background: rgba(212, 175, 55, 0.22);
+    background: rgba(212, 175, 55, 0.24);
     border-color: #ffe082;
     color: #fff;
     box-shadow: 0 0 15px rgba(212, 175, 55, 0.35);
 }
 
 .shop-highlight-btn {
-    background: linear-gradient(180deg, #1d180e, #100d07);
+    background: linear-gradient(180deg, #211b10, #100d07);
 }
 
 .passive-timer-badge {
     text-align: center;
-    margin-top: 10px;
-    font-size: 0.8rem;
+    margin-top: 12px;
+    font-size: 0.82rem;
     color: var(--text-muted);
 }
 
@@ -518,8 +569,8 @@ body {
     display: flex;
     justify-content: space-between;
     flex-wrap: wrap;
-    gap: 8px;
-    font-size: 0.82rem;
+    gap: 10px;
+    font-size: 0.86rem;
     color: var(--text-muted);
 }
 
@@ -527,8 +578,9 @@ body {
     color: var(--gold-light);
 }
 
-/* LEADERBOARD */
+/* ZENTRIERTES LEADERBOARD DARUNTER */
 .leaderboard-card {
+    width: 100%;
     background: linear-gradient(180deg, #12100c 0%, #080705 100%);
     border: 1px solid var(--border-gold);
     border-radius: 22px;
@@ -759,6 +811,10 @@ body {
 @media (max-width: 720px) {
     .admin-grid {
         grid-template-columns: 1fr;
+    }
+    .reel {
+        height: 105px;
+        font-size: 3rem;
     }
 }
 

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AURELIA SLOTS • Royal Gold Lounge</title>
+    <title>AURELIA ROYAL SLOTS • Retro Vegas Lounge</title>
     <link rel="stylesheet" href="style.css">
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -17,7 +17,7 @@
         <button id="close-broadcast" class="close-banner-btn" type="button">✕</button>
     </div>
 
-    <!-- ECK-BADGE OBEN LINKS -->
+    <!-- ECK-BADGE UNTEN LINKS -->
     <div id="corner-id-badge" class="corner-id-badge hidden">
         <span class="pulse-dot"></span>
         <span id="corner-id-text">ID1 • Spieler</span>
@@ -29,7 +29,7 @@
             <span class="logo-crown">👑</span>
             <div>
                 <h1>AURELIA ROYAL SLOTS</h1>
-                <span class="brand-sub">EXECUTIVE HIGH-LIMIT CLUB</span>
+                <span class="brand-sub">CLASSIC VEGAS GOLD CABINET</span>
             </div>
         </div>
 
@@ -45,55 +45,64 @@
         </div>
     </header>
 
-    <!-- HAUPTBEREICH -->
-    <main class="main-layout">
+    <!-- ZENTRIERTER HAUPTBEREICH -->
+    <main class="center-stage">
 
-        <!-- ROYAL GOLD & BLACK SLOT MACHINE -->
-        <section id="slot-card" class="slot-card">
-            <div class="slot-crown-header">
-                <span>✦ AURELIA ROYAL EDITION ✦</span>
+        <!-- RETRO VEGAS SLOT CABINET (GROSS & ZENTRIERT) -->
+        <section id="slot-card" class="retro-cabinet">
+            <!-- OBERER RETRO-BOGEN / MARQUEE -->
+            <div class="cabinet-marquee">
+                <div class="marquee-bulbs">
+                    <span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+                </div>
+                <div class="marquee-title">★ JACKPOT 1000x ★</div>
+                <div class="marquee-sub">AURELIA DELUXE 3-REEL</div>
             </div>
 
-            <div class="slot-header">
-                <div class="stat-box">
-                    <span class="stat-label">DEIN GUTHABEN</span>
-                    <div class="stat-value"><span id="balance">0</span> 🪙</div>
+            <!-- DIGITALE RETRO-ANZEIGEN -->
+            <div class="cabinet-displays">
+                <div class="digital-readout">
+                    <span class="readout-label">CREDIT / GUTHABEN</span>
+                    <div class="readout-value"><span id="balance">0</span> 🪙</div>
                 </div>
 
-                <div class="stat-box last-win-box">
-                    <span class="stat-label">LETZTER GEWINN</span>
-                    <div class="stat-value"><span id="last-win">0</span> 🪙</div>
+                <div class="digital-readout last-win-box">
+                    <span class="readout-label">WINNER PAID / GEWINN</span>
+                    <div class="readout-value"><span id="last-win">0</span> 🪙</div>
                 </div>
             </div>
 
-            <!-- WALZEN & GOLD-HEBEL -->
-            <div class="machine-stage">
-                <div class="reels-frame">
-                    <div class="payline-bar"></div>
-                    <div class="reel" id="reel1"><span class="reel-symbol">7️⃣</span></div>
-                    <div class="reel" id="reel2"><span class="reel-symbol">💎</span></div>
-                    <div class="reel" id="reel3"><span class="reel-symbol">👑</span></div>
+            <!-- WALZEN-FENSTER & 1-ARMIGER BANDIT HEBEL -->
+            <div class="cabinet-body">
+                <div class="reels-bezel">
+                    <div class="reels-frame">
+                        <div class="payline-bar"></div>
+                        <div class="reel" id="reel1"><span class="reel-symbol">7️⃣</span></div>
+                        <div class="reel" id="reel2"><span class="reel-symbol">💎</span></div>
+                        <div class="reel" id="reel3"><span class="reel-symbol">👑</span></div>
+                    </div>
                 </div>
 
-                <!-- 1-ARMIGER BANDIT HEBEL -->
-                <div id="lever-assembly" class="lever-assembly" title="Hebel ziehen">
-                    <div class="lever-base"></div>
+                <!-- MASSIVER RETRO-HEBEL RECHTS -->
+                <div id="lever-assembly" class="lever-assembly" title="Hebel ziehen zum Drehen">
+                    <div class="lever-mount"></div>
                     <div id="lever-arm" class="lever-arm">
                         <div class="lever-knob"></div>
                     </div>
                 </div>
             </div>
 
-            <div id="status-text" class="status-banner">Bereit für Ihren nächsten Spin!</div>
+            <!-- STATUS DISPLAY -->
+            <div id="status-text" class="status-banner">BEREIT FÜR IHREN NÄCHSTEN SPIN!</div>
 
-            <!-- EINSATZ & DREHEN -->
+            <!-- HAUPT-STEUERUNG (EINSATZ & DREHEN) -->
             <div class="controls-area">
                 <div class="bet-control">
-                    <label for="bet-input">EINSATZ (MIN. 1 🪙)</label>
+                    <label for="bet-input">BET / EINSATZ (MIN. 1 🪙)</label>
                     <input type="number" id="bet-input" value="50" min="1" step="1">
                 </div>
 
-                <button id="spin-btn" class="spin-btn" type="button">🎰 DREHEN</button>
+                <button id="spin-btn" class="spin-btn" type="button">🎰 SPIN / DREHEN</button>
             </div>
 
             <!-- AUTO-SPIN, COIN-SHOP & 5-MINUTEN-BONUS -->
@@ -106,7 +115,7 @@
                 ⏳ Gratis-Bonus: +10 🪙 in <strong id="passive-timer-text">05:00</strong>
             </div>
 
-            <!-- GEWINNTABELLE -->
+            <!-- RETRO PAYTABLE -->
             <div class="paytable-strip">
                 <span>🍒 <strong>2x</strong></span>
                 <span>🍋 <strong>3x</strong></span>
@@ -118,7 +127,7 @@
             </div>
         </section>
 
-        <!-- LIVE HIGH-ROLLER LEADERBOARD -->
+        <!-- ZENTRIERTES LEADERBOARD DARUNTER -->
         <section class="leaderboard-card">
             <div class="lb-header">
                 <h2>🏆 Live High-Roller Leaderboard</h2>
@@ -195,7 +204,6 @@
             </div>
 
             <div class="admin-grid">
-                <!-- COINS & RÄNGE -->
                 <div class="admin-box">
                     <h3>💰 Guthaben & Ränge</h3>
                     <input type="text" id="target-id-input" placeholder="Ziel-ID (z. B. ID1)">
@@ -221,7 +229,6 @@
                     </div>
                 </div>
 
-                <!-- SPIN STEUERUNG & COIN RAIN -->
                 <div class="admin-box">
                     <h3>🎯 Spin-Steuerung & Events</h3>
                     <input type="text" id="rig-user-id-input" placeholder="Spieler-ID (z. B. ID1)">
@@ -246,13 +253,11 @@
                     </div>
                 </div>
 
-                <!-- SPIELERVERWALTUNG -->
                 <div class="admin-box full-span">
                     <h3>👥 Registrierte Spieler (<span id="total-users-count">0</span>)</h3>
                     <div id="player-list-container" class="player-list"></div>
                 </div>
 
-                <!-- BROADCAST & LOGS -->
                 <div class="admin-box full-span">
                     <h3>📢 Globaler Broadcast & System-Logs</h3>
                     <div class="rank-row">
