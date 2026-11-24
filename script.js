@@ -13,9 +13,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// ==================== 2. VERSCHLÜSSELTES ADMIN-PASSWORT (SHA-256) ====================
-const ADMIN_HASH = "4d8f2b0f51ce9756501188b795bc7f534d819468ea9bad829ac00d4870f469e7";
-
+// ==================== 2. PASSWORT-HASHING (SHA-256) ====================
 async function sha256(text) {
     const encoder = new TextEncoder();
     const data = encoder.encode(text);
@@ -24,8 +22,9 @@ async function sha256(text) {
     return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
+// ==================== 3. SPIEL-KONFIGURATION & RECHTE ====================
+const SUPER_ADMIN_ID = 'ID1';
 
-// ==================== 3. SPIEL-KONFIGURATION ====================
 const RANKS = {
     member:  { label: '👤 Member',            bonus: 1.00, cssClass: 'rank-member' },
     bronze:  { label: '🥉 Bronze Club',       bonus: 1.05, cssClass: 'rank-bronze' },
@@ -96,6 +95,14 @@ function getCurrentUser() {
     return currentUserId ? (usersMap[currentUserId] || null) : null;
 }
 
+function isSuperAdmin(user) {
+    return Boolean(user && user.id === SUPER_ADMIN_ID);
+}
+
+function hasAdminAccess(user) {
+    return Boolean(user && (user.id === SUPER_ADMIN_ID || user.isAdmin === true));
+}
+
 function getRankInfo(rankKey) {
     return RANKS[rankKey] || RANKS.member;
 }
@@ -113,7 +120,7 @@ function pushGlobalBroadcast(text, isWinner = false) {
     });
 }
 
-// ==================== 5. AUTHENTIFIZIERUNG (CLOUD LOGIN & REGISTER MIT HASHING) ====================
+// ==================== 5. AUTHENTIFIZIERUNG (CLOUD LOGIN & REGISTER) ====================
 let authMode = 'login';
 
 const authModal = document.getElementById('auth-modal');
@@ -188,7 +195,8 @@ async function handleAuthSubmit() {
                 password: hashedPassword,
                 coins: 2500,
                 rank: 'member',
-                banned: false
+                banned: false,
+                isAdmin: newId === SUPER_ADMIN_ID
             };
 
             await db.ref(`users/${newId}`).set(newUser);
@@ -262,12 +270,24 @@ function updateUI() {
     const profileBadge = document.getElementById('user-profile-badge');
     const cornerBadge = document.getElementById('corner-id-badge');
     const logoutBtn = document.getElementById('logout-btn');
+    const adminBtn = document.getElementById('open-admin-btn');
 
     if (user) {
         authModal.classList.add('hidden');
         profileBadge.classList.remove('hidden');
         cornerBadge.classList.remove('hidden');
         logoutBtn.classList.remove('hidden');
+
+        // Admin-Button nur für ID1 oder ernannte Co-Admins anzeigen
+        if (adminBtn) {
+            if (hasAdminAccess(user)) adminBtn.classList.remove('hidden');
+            else adminBtn.classList.add('hidden');
+        }
+
+        // Falls ein aktiver Admin entmachtet wurde, Konsole sofort schließen
+        if (!hasAdminAccess(user) && !dashboardModal.classList.contains('hidden')) {
+            dashboardModal.classList.add('hidden');
+        }
 
         const rankInfo = getRankInfo(user.rank);
         const rankBadgeEl = document.getElementById('display-rank-badge');
@@ -282,6 +302,8 @@ function updateUI() {
         profileBadge.classList.add('hidden');
         cornerBadge.classList.add('hidden');
         logoutBtn.classList.add('hidden');
+        if (adminBtn) adminBtn.classList.add('hidden');
+        if (dashboardModal) dashboardModal.classList.add('hidden');
         balanceEl.textContent = '0';
         authModal.classList.remove('hidden');
     }
@@ -587,47 +609,37 @@ document.getElementById('close-broadcast').addEventListener('click', () => {
     document.getElementById('broadcast-banner').classList.add('hidden');
 });
 
-// ==================== 9. EXECUTIVE ADMIN KONSOLE (HASH-GESICHERT) ====================
+// ==================== 9. EXECUTIVE ADMIN KONSOLE (ROLLEN-BASIERT & ID1 OWNER) ====================
 const loginModal = document.getElementById('admin-login-modal');
 const dashboardModal = document.getElementById('admin-dashboard-modal');
-const passInput = document.getElementById('admin-password-input');
-const loginError = document.getElementById('login-error');
 
-document.getElementById('open-admin-btn').addEventListener('click', () => {
-    loginError.classList.add('hidden');
-    passInput.value = '';
-    loginModal.classList.remove('hidden');
-    passInput.focus();
-});
+function openExecutiveConsole() {
+    const user = getCurrentUser();
+    if (!hasAdminAccess(user)) {
+        alert('🚫 Zugriff verweigert! Sie besitzen keine Admin-Berechtigung.');
+        return;
+    }
+
+    if (loginModal) loginModal.classList.add('hidden');
+    dashboardModal.classList.remove('hidden');
+    renderAdminPlayers();
+    renderActiveRigs();
+    addCloudLog(`🔓 Executive Admin Konsole durch ${user.id} (${user.username}) geöffnet.`);
+}
+
+document.getElementById('open-admin-btn').addEventListener('click', openExecutiveConsole);
 
 document.addEventListener('keydown', (e) => {
     if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 'a') {
         e.preventDefault();
-        loginModal.classList.remove('hidden');
-        passInput.focus();
+        openExecutiveConsole();
     }
 });
 
-document.getElementById('close-login-modal').addEventListener('click', () => loginModal.classList.add('hidden'));
-document.getElementById('close-dashboard-modal').addEventListener('click', () => dashboardModal.classList.add('hidden'));
-
-async function checkAdminLogin() {
-    const enteredHash = await sha256(passInput.value);
-    if (enteredHash === ADMIN_HASH) {
-        loginModal.classList.add('hidden');
-        dashboardModal.classList.remove('hidden');
-        renderAdminPlayers();
-        renderActiveRigs();
-        addCloudLog('🔓 Executive Admin Konsole entsperrt.');
-    } else {
-        loginError.classList.remove('hidden');
-    }
+if (document.getElementById('close-login-modal')) {
+    document.getElementById('close-login-modal').addEventListener('click', () => loginModal.classList.add('hidden'));
 }
-
-document.getElementById('admin-login-submit').addEventListener('click', checkAdminLogin);
-passInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') checkAdminLogin();
-});
+document.getElementById('close-dashboard-modal').addEventListener('click', () => dashboardModal.classList.add('hidden'));
 
 function findPlayerByIdInput(rawInput) {
     const cleaned = rawInput.trim().toUpperCase();
@@ -636,6 +648,8 @@ function findPlayerByIdInput(rawInput) {
 }
 
 function modifyCoinsById(action) {
+    if (!hasAdminAccess(getCurrentUser())) return;
+
     const rawId = document.getElementById('target-id-input').value;
     const amount = parseInt(document.getElementById('admin-coin-amount').value, 10);
 
@@ -670,6 +684,8 @@ document.getElementById('admin-remove-coins').addEventListener('click', () => mo
 document.getElementById('admin-set-coins').addEventListener('click', () => modifyCoinsById('set'));
 
 document.getElementById('admin-set-rank-btn').addEventListener('click', () => {
+    if (!hasAdminAccess(getCurrentUser())) return;
+
     const rawId = document.getElementById('target-id-input').value;
     const selectedRank = document.getElementById('admin-rank-select').value;
 
@@ -690,6 +706,8 @@ document.getElementById('admin-set-rank-btn').addEventListener('click', () => {
 });
 
 document.getElementById('admin-rain-btn').addEventListener('click', () => {
+    if (!hasAdminAccess(getCurrentUser())) return;
+
     const amount = parseInt(document.getElementById('rain-amount-input').value, 10);
     const userList = getUsersArray();
     if (isNaN(amount) || amount <= 0 || userList.length === 0) return;
@@ -704,6 +722,8 @@ document.getElementById('admin-rain-btn').addEventListener('click', () => {
 });
 
 document.getElementById('trigger-user-spin-btn').addEventListener('click', () => {
+    if (!hasAdminAccess(getCurrentUser())) return;
+
     const rawId = document.getElementById('rig-user-id-input').value;
     const outcome = document.getElementById('rig-outcome-select').value;
 
@@ -743,12 +763,41 @@ function renderActiveRigs() {
 function renderAdminPlayers() {
     const listContainer = document.getElementById('player-list-container');
     if (!listContainer) return;
+
+    const currentUser = getCurrentUser();
+    const canManageAdmins = isSuperAdmin(currentUser);
     const userList = getUsersArray();
+
     document.getElementById('total-users-count').textContent = userList.length;
     listContainer.innerHTML = '';
 
     userList.forEach(user => {
         const rankInfo = getRankInfo(user.rank);
+        const targetIsOwner = user.id === SUPER_ADMIN_ID;
+        const targetIsAdmin = user.isAdmin === true;
+
+        let roleTag = '';
+        if (targetIsOwner) {
+            roleTag = `<span style="background: rgba(255,215,0,0.18); color: #ffd700; border: 1px solid rgba(255,215,0,0.45); padding: 2px 6px; border-radius: 6px; font-size: 0.72rem; font-weight: 700;">👑 OWNER</span>`;
+        } else if (targetIsAdmin) {
+            roleTag = `<span style="background: rgba(0,229,255,0.15); color: #00e5ff; border: 1px solid rgba(0,229,255,0.4); padding: 2px 6px; border-radius: 6px; font-size: 0.72rem; font-weight: 700;">🛡️ ADMIN</span>`;
+        }
+
+        // Nur ID1 sieht den Button zum Vergeben/Entziehen von Admin-Rechten bei anderen Spielern
+        let adminToggleBtn = '';
+        if (canManageAdmins && !targetIsOwner) {
+            adminToggleBtn = `
+                <button class="mini-btn" style="background: ${targetIsAdmin ? 'rgba(255,152,0,0.2)' : 'rgba(0,229,255,0.2)'}; color: ${targetIsAdmin ? '#ffb74d' : '#00e5ff'}; border: 1px solid ${targetIsAdmin ? 'rgba(255,152,0,0.45)' : 'rgba(0,229,255,0.45)'};" onclick="toggleAdminRole('${user.id}')">
+                    ${targetIsAdmin ? '- Admin' : '+ Admin'}
+                </button>
+            `;
+        }
+
+        // ID1 kann nicht gebannt werden
+        const banBtn = targetIsOwner ? '' : `
+            <button class="mini-btn mini-ban" onclick="toggleBan('${user.id}')">${user.banned ? 'Entbannen' : 'Bannen'}</button>
+        `;
+
         const item = document.createElement('div');
         item.className = `player-item ${user.banned ? 'banned' : ''}`;
         item.innerHTML = `
@@ -756,13 +805,15 @@ function renderAdminPlayers() {
                 <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:4px;">
                     <span class="id-tag">${user.id}</span>
                     <strong>${user.username}</strong>
+                    ${roleTag}
                     <span class="rank-pill ${rankInfo.cssClass}">${rankInfo.label}</span>
                 </div>
                 <span style="color: var(--gold-light); font-size: 0.85rem; font-weight:700;">${user.coins.toLocaleString('de-DE')} 🪙</span>
             </div>
             <div class="player-actions">
                 <button class="mini-btn mini-select" onclick="selectIdForAdmin('${user.id}')">ID wählen</button>
-                <button class="mini-btn mini-ban" onclick="toggleBan('${user.id}')">${user.banned ? 'Entbannen' : 'Bannen'}</button>
+                ${adminToggleBtn}
+                ${banBtn}
             </div>
         `;
         listContainer.appendChild(item);
@@ -774,7 +825,29 @@ window.selectIdForAdmin = function(id) {
     document.getElementById('rig-user-id-input').value = id;
 };
 
+window.toggleAdminRole = function(id) {
+    const currentUser = getCurrentUser();
+    if (!isSuperAdmin(currentUser)) {
+        alert('🚫 Nur ID1 darf Admin-Rechte vergeben oder entziehen!');
+        return;
+    }
+    if (id === SUPER_ADMIN_ID) return;
+
+    const targetUser = usersMap[id];
+    if (targetUser) {
+        const newAdminStatus = !targetUser.isAdmin;
+        db.ref(`users/${id}/isAdmin`).set(newAdminStatus);
+        addCloudLog(`${newAdminStatus ? '🛡️' : '🔻'} Super-Admin ${currentUser.id} hat ${targetUser.id} (${targetUser.username}) Admin-Rechte ${newAdminStatus ? 'gegeben' : 'entzogen'}.`);
+    }
+};
+
 window.toggleBan = function(id) {
+    if (!hasAdminAccess(getCurrentUser())) return;
+    if (id === SUPER_ADMIN_ID) {
+        alert('🚫 Der Owner-Account ID1 kann nicht gebannt werden!');
+        return;
+    }
+
     const user = usersMap[id];
     if (user) {
         const newStatus = !user.banned;
@@ -784,6 +857,8 @@ window.toggleBan = function(id) {
 };
 
 document.getElementById('send-broadcast-btn').addEventListener('click', () => {
+    if (!hasAdminAccess(getCurrentUser())) return;
+
     const text = document.getElementById('admin-broadcast-input').value.trim();
     if (!text) return;
     pushGlobalBroadcast(`📢 ADMIN NACHRICHT: ${text}`, false);
@@ -791,5 +866,9 @@ document.getElementById('send-broadcast-btn').addEventListener('click', () => {
 });
 
 document.getElementById('clear-logs-btn').addEventListener('click', () => {
+    if (!isSuperAdmin(getCurrentUser())) {
+        alert('🚫 Nur ID1 darf das System-Protokoll komplett löschen!');
+        return;
+    }
     db.ref('logs').remove();
 });
