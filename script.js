@@ -22,8 +22,11 @@ async function sha256(text) {
     return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-// ==================== 3. SPIEL-KONFIGURATION & RECHTE ====================
+// ==================== 3. SPIEL-KONFIGURATION, RECHTE & SHOP ====================
 const SUPER_ADMIN_ID = 'ID1';
+const AUTO_SPIN_MIN_COINS = 500;
+const PASSIVE_REWARD_COINS = 10;
+const PASSIVE_INTERVAL_SEC = 300; // 5 Minuten
 
 const RANKS = {
     member:  { label: '👤 Member',            bonus: 1.00, cssClass: 'rank-member' },
@@ -34,6 +37,71 @@ const RANKS = {
     royal:   { label: '👑 Royal High-Roller', bonus: 1.40, cssClass: 'rank-royal' },
     emperor: { label: '⚡ Aurelia Emperor',   bonus: 1.50, cssClass: 'rank-emperor' }
 };
+
+const SHOP_ITEMS = [
+    {
+        id: 'feature_autospin',
+        type: 'feature',
+        name: '🤖 Auto-Spin Modul',
+        price: 1500,
+        desc: `Schaltet Auto-Spin frei (aktivierbar ab ${AUTO_SPIN_MIN_COINS} 🪙 Guthaben).`
+    },
+    {
+        id: 'feature_turbo',
+        type: 'feature',
+        name: '⚡ Turbo-Walzen',
+        price: 3000,
+        desc: 'Doppelt so schnelle Drehungen für maximale Action.'
+    },
+    {
+        id: 'title_gambler',
+        type: 'title',
+        badge: '🎲 High-Stakes Gambler',
+        name: 'Titel: High-Stakes Gambler',
+        price: 1000,
+        desc: 'Rein kosmetischer Titel im Profil & Leaderboard.'
+    },
+    {
+        id: 'title_vip',
+        type: 'title',
+        badge: '🔥 Neon VIP',
+        name: 'Titel: Neon VIP',
+        price: 5000,
+        desc: 'Rein kosmetischer VIP-Status für dein Profil.'
+    },
+    {
+        id: 'title_shark',
+        type: 'title',
+        badge: '🦈 Cyber Shark',
+        name: 'Titel: Cyber Shark',
+        price: 15000,
+        desc: 'Zeige allen im Leaderboard, wer das Becken regiert.'
+    },
+    {
+        id: 'title_whale',
+        type: 'title',
+        badge: '🛸 Galactic Whale',
+        name: 'Titel: Galactic Whale',
+        price: 50000,
+        desc: 'Der ultimative kosmetische Prestige-Titel.'
+    },
+    {
+        id: 'theme_cyberpunk',
+        type: 'theme',
+        themeClass: 'theme-cyberpunk',
+        name: '💜 Theme: Cyberpunk Neon',
+        price: 2500,
+        desc: 'Färbt den Automaten in leuchtendes Neon-Violett.'
+    },
+    {
+        id: 'theme_gold',
+        type: 'theme',
+        themeClass: 'theme-gold',
+        name: '💛 Theme: 24K Gold Edition',
+        price: 10000,
+        desc: 'Verleiht deiner Slot-Maschine einen edlen Gold-Glow.'
+    }
+];
 
 const symbols = [
     { key: 'cherry',  icon: '🍒', multiplier: 2,    weight: 42 },
@@ -53,12 +121,15 @@ let lastBroadcastTimestamp = 0;
 
 let currentBet = 50;
 let isSpinning = false;
+let isAutoSpinning = false;
+let passiveSecondsLeft = PASSIVE_INTERVAL_SEC;
 
 db.ref('users').on('value', (snapshot) => {
     usersMap = snapshot.val() || {};
     updateUI();
     renderLeaderboard();
     renderAdminPlayers();
+    renderShop();
 });
 
 db.ref('rigs').on('value', (snapshot) => {
@@ -95,6 +166,10 @@ function getCurrentUser() {
     return currentUserId ? (usersMap[currentUserId] || null) : null;
 }
 
+function userOwnsItem(user, itemId) {
+    return Boolean(user && user.ownedItems && user.ownedItems[itemId] === true);
+}
+
 function isSuperAdmin(user) {
     return Boolean(user && user.id === SUPER_ADMIN_ID);
 }
@@ -119,6 +194,30 @@ function pushGlobalBroadcast(text, isWinner = false) {
         timestamp: Date.now()
     });
 }
+
+// ==================== 4B. 5-MINUTEN GRATIS-COINS TIMER ====================
+setInterval(() => {
+    const user = getCurrentUser();
+    const timerTextEl = document.getElementById('passive-timer-text');
+    if (!user || user.banned) {
+        if (timerTextEl) timerTextEl.textContent = '05:00';
+        return;
+    }
+
+    passiveSecondsLeft--;
+    if (passiveSecondsLeft <= 0) {
+        passiveSecondsLeft = PASSIVE_INTERVAL_SEC;
+        const updatedCoins = (user.coins || 0) + PASSIVE_REWARD_COINS;
+        db.ref(`users/${user.id}/coins`).set(updatedCoins);
+        addCloudLog(`🎁 Treuebonus: ${user.id} (${user.username}) erhielt +${PASSIVE_REWARD_COINS} 🪙.`);
+    }
+
+    if (timerTextEl) {
+        const mins = String(Math.floor(passiveSecondsLeft / 60)).padStart(2, '0');
+        const secs = String(passiveSecondsLeft % 60).padStart(2, '0');
+        timerTextEl.textContent = `${mins}:${secs}`;
+    }
+}, 1000);
 
 // ==================== 5. AUTHENTIFIZIERUNG (CLOUD LOGIN & REGISTER) ====================
 let authMode = 'login';
@@ -196,7 +295,10 @@ async function handleAuthSubmit() {
                 coins: 2500,
                 rank: 'member',
                 banned: false,
-                isAdmin: newId === SUPER_ADMIN_ID
+                isAdmin: newId === SUPER_ADMIN_ID,
+                ownedItems: {},
+                equippedTitle: '',
+                equippedTheme: ''
             };
 
             await db.ref(`users/${newId}`).set(newUser);
@@ -243,6 +345,7 @@ authPasswordInput.addEventListener('keydown', (e) => {
 });
 
 document.getElementById('logout-btn').addEventListener('click', () => {
+    stopAutoSpin();
     const user = getCurrentUser();
     if (user) addCloudLog(`🚪 Logout: ${user.id} (${user.username})`);
     currentUserId = null;
@@ -251,19 +354,41 @@ document.getElementById('logout-btn').addEventListener('click', () => {
     authModal.classList.remove('hidden');
 });
 
-// ==================== 6. UI & LIVE LEADERBOARD ====================
+// ==================== 6. UI, SHOP & LIVE LEADERBOARD ====================
 const balanceEl = document.getElementById('balance');
 const lastWinEl = document.getElementById('last-win');
 const lastWinBox = document.querySelector('.last-win-box');
 const betInputEl = document.getElementById('bet-input');
 const statusEl = document.getElementById('status-text');
 const spinBtn = document.getElementById('spin-btn');
+const autoSpinBtn = document.getElementById('auto-spin-btn');
 const slotCard = document.getElementById('slot-card');
 const reels = [
     document.getElementById('reel1'),
     document.getElementById('reel2'),
     document.getElementById('reel3')
 ];
+
+function updateAutoSpinButtonUI(user) {
+    if (!autoSpinBtn) return;
+    if (!user || !userOwnsItem(user, 'feature_autospin')) {
+        autoSpinBtn.textContent = '🤖 Auto-Spin (🔒 1.500 🪙 im Shop)';
+        autoSpinBtn.classList.remove('auto-active');
+        return;
+    }
+    if (user.coins < AUTO_SPIN_MIN_COINS && !isAutoSpinning) {
+        autoSpinBtn.textContent = `🤖 Auto-Spin (ab ${AUTO_SPIN_MIN_COINS} 🪙)`;
+        autoSpinBtn.classList.remove('auto-active');
+        return;
+    }
+    if (isAutoSpinning) {
+        autoSpinBtn.textContent = '⏹️ Auto-Spin: AN (Stoppen)';
+        autoSpinBtn.classList.add('auto-active');
+    } else {
+        autoSpinBtn.textContent = '🤖 Auto-Spin: AUS';
+        autoSpinBtn.classList.remove('auto-active');
+    }
+}
 
 function updateUI() {
     const user = getCurrentUser();
@@ -278,36 +403,131 @@ function updateUI() {
         cornerBadge.classList.remove('hidden');
         logoutBtn.classList.remove('hidden');
 
-        // Admin-Button nur für ID1 oder ernannte Co-Admins anzeigen
         if (adminBtn) {
             if (hasAdminAccess(user)) adminBtn.classList.remove('hidden');
             else adminBtn.classList.add('hidden');
         }
 
-        // Falls ein aktiver Admin entmachtet wurde, Konsole sofort schließen
         if (!hasAdminAccess(user) && !dashboardModal.classList.contains('hidden')) {
             dashboardModal.classList.add('hidden');
         }
 
+        slotCard.classList.remove('theme-cyberpunk', 'theme-gold');
+        if (user.equippedTheme) {
+            slotCard.classList.add(user.equippedTheme);
+        }
+
         const rankInfo = getRankInfo(user.rank);
         const rankBadgeEl = document.getElementById('display-rank-badge');
-        rankBadgeEl.textContent = rankInfo.label;
+        rankBadgeEl.textContent = user.equippedTitle ? `${rankInfo.label} • ${user.equippedTitle}` : rankInfo.label;
         rankBadgeEl.className = `rank-pill ${rankInfo.cssClass}`;
 
         document.getElementById('display-user-id').textContent = user.id;
         document.getElementById('display-username').textContent = user.username;
         document.getElementById('corner-id-text').textContent = `${user.id} • ${user.username} (${rankInfo.label})`;
         balanceEl.textContent = user.coins.toLocaleString('de-DE');
+
+        const shopBal = document.getElementById('shop-balance-display');
+        if (shopBal) shopBal.textContent = user.coins.toLocaleString('de-DE');
     } else {
         profileBadge.classList.add('hidden');
         cornerBadge.classList.add('hidden');
         logoutBtn.classList.add('hidden');
         if (adminBtn) adminBtn.classList.add('hidden');
         if (dashboardModal) dashboardModal.classList.add('hidden');
+        slotCard.classList.remove('theme-cyberpunk', 'theme-gold');
         balanceEl.textContent = '0';
         authModal.classList.remove('hidden');
     }
+
+    updateAutoSpinButtonUI(user);
 }
+
+// ==================== 6B. COIN SHOP LOGIK ====================
+const shopModal = document.getElementById('shop-modal');
+document.getElementById('open-shop-btn').addEventListener('click', () => {
+    renderShop();
+    shopModal.classList.remove('hidden');
+});
+
+document.getElementById('close-shop-btn').addEventListener('click', () => {
+    shopModal.classList.add('hidden');
+});
+
+function renderShop() {
+    const container = document.getElementById('shop-items-container');
+    const user = getCurrentUser();
+    if (!container || !user) return;
+
+    container.innerHTML = '';
+
+    SHOP_ITEMS.forEach(item => {
+        const owned = userOwnsItem(user, item.id);
+        const isEquipped =
+            (item.type === 'title' && user.equippedTitle === item.badge) ||
+            (item.type === 'theme' && user.equippedTheme === item.themeClass);
+
+        let btnHtml = '';
+        if (!owned) {
+            const canAfford = user.coins >= item.price;
+            btnHtml = `<button class="mini-btn" style="width:100%; margin-top:10px; background:${canAfford ? 'var(--gold-main)' : 'rgba(255,255,255,0.1)'}; color:${canAfford ? '#000' : '#888'}; font-weight:800;" onclick="buyShopItem('${item.id}')">Kaufen (${item.price.toLocaleString('de-DE')} 🪙)</button>`;
+        } else if (item.type === 'title' || item.type === 'theme') {
+            btnHtml = `<button class="mini-btn" style="width:100%; margin-top:10px; background:${isEquipped ? 'rgba(0,230,118,0.2)' : 'rgba(0,229,255,0.2)'}; color:${isEquipped ? '#00e676' : '#00e5ff'};" onclick="equipShopItem('${item.id}')">${isEquipped ? '✅ Aktiv (Ablegen)' : '✨ Auswählen'}</button>`;
+        } else {
+            btnHtml = `<button class="mini-btn" disabled style="width:100%; margin-top:10px; background:rgba(0,230,118,0.15); color:#00e676;">✅ Freigeschaltet</button>`;
+        }
+
+        const card = document.createElement('div');
+        card.style.cssText = 'background: var(--bg-elevated); border: 1px solid var(--border-subtle); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between;';
+        card.innerHTML = `
+            <div>
+                <div style="font-weight: 800; font-size: 0.98rem; color: #fff; margin-bottom: 4px;">${item.name}</div>
+                <div style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.35;">${item.desc}</div>
+            </div>
+            ${btnHtml}
+        `;
+        container.appendChild(card);
+    });
+}
+
+window.buyShopItem = function(itemId) {
+    const user = getCurrentUser();
+    if (!user) return;
+    const item = SHOP_ITEMS.find(i => i.id === itemId);
+    if (!item || userOwnsItem(user, itemId)) return;
+
+    if (user.coins < item.price) {
+        alert(`❌ Nicht genug Coins! Du brauchst ${item.price.toLocaleString('de-DE')} 🪙.`);
+        return;
+    }
+
+    const newCoins = user.coins - item.price;
+    db.ref(`users/${user.id}/coins`).set(newCoins);
+    db.ref(`users/${user.id}/ownedItems/${itemId}`).set(true);
+
+    if (item.type === 'title') {
+        db.ref(`users/${user.id}/equippedTitle`).set(item.badge);
+    } else if (item.type === 'theme') {
+        db.ref(`users/${user.id}/equippedTheme`).set(item.themeClass);
+    }
+
+    addCloudLog(`🛒 ${user.id} (${user.username}) kaufte "${item.name}" für ${item.price} 🪙.`);
+};
+
+window.equipShopItem = function(itemId) {
+    const user = getCurrentUser();
+    if (!user || !userOwnsItem(user, itemId)) return;
+    const item = SHOP_ITEMS.find(i => i.id === itemId);
+    if (!item) return;
+
+    if (item.type === 'title') {
+        const nextVal = user.equippedTitle === item.badge ? '' : item.badge;
+        db.ref(`users/${user.id}/equippedTitle`).set(nextVal);
+    } else if (item.type === 'theme') {
+        const nextVal = user.equippedTheme === item.themeClass ? '' : item.themeClass;
+        db.ref(`users/${user.id}/equippedTheme`).set(nextVal);
+    }
+};
 
 function renderLeaderboard() {
     const tbody = document.getElementById('leaderboard-body');
@@ -335,12 +555,14 @@ function renderLeaderboard() {
         else if (place === 2) { placeDisplay = '🥈 #2'; rowClass = 'top-2'; }
         else if (place === 3) { placeDisplay = '🥉 #3'; rowClass = 'top-3'; }
 
+        const titleBadge = player.equippedTitle ? ` <span class="cosmetic-tag">${player.equippedTitle}</span>` : '';
+
         const tr = document.createElement('tr');
         tr.className = `${rowClass} ${isMe ? 'is-me' : ''}`;
         tr.innerHTML = `
             <td class="place-badge">${placeDisplay}</td>
             <td><span class="id-tag">${player.id}</span></td>
-            <td><strong>${player.username}</strong> ${isMe ? '<span style="color:var(--gold-main); font-size:0.78rem;">(Du)</span>' : ''}</td>
+            <td><strong>${player.username}</strong>${titleBadge} ${isMe ? '<span style="color:var(--gold-main); font-size:0.78rem;">(Du)</span>' : ''}</td>
             <td><span class="rank-pill ${rankInfo.cssClass}">${rankInfo.label}</span></td>
             <td class="lb-coins">${player.coins.toLocaleString('de-DE')} 🪙</td>
         `;
@@ -348,11 +570,12 @@ function renderLeaderboard() {
     });
 }
 
-// ==================== 7. RUNDUNG & EINSATZ ====================
+// ==================== 7. RUNDUNG & EINSATZ (MIN. 1 COIN) ====================
 function roundBetAmount(value) {
     let num = parseInt(value, 10);
-    if (isNaN(num) || num < 10) return 10;
+    if (isNaN(num) || num < 1) return 1;
 
+    if (num < 10) return num;
     if (num < 100) return Math.round(num / 10) * 10;
     if (num < 1000) return Math.round(num / 100) * 100;
     if (num < 10000) return Math.round(num / 1000) * 1000;
@@ -373,7 +596,7 @@ betInputEl.addEventListener('keydown', (e) => {
     }
 });
 
-// ==================== 8. SLOT LOGIK & HEBEL ANIMATION ====================
+// ==================== 8. SLOT LOGIK, AUTO-SPIN & HEBEL ====================
 const leverAssembly = document.getElementById('lever-assembly');
 const leverArm = document.getElementById('lever-arm');
 
@@ -388,6 +611,35 @@ if (leverAssembly) {
         if (!spinBtn.disabled) spinBtn.click();
     });
 }
+
+function stopAutoSpin() {
+    isAutoSpinning = false;
+    updateAutoSpinButtonUI(getCurrentUser());
+}
+
+autoSpinBtn.addEventListener('click', () => {
+    const user = getCurrentUser();
+    if (!user) {
+        authModal.classList.remove('hidden');
+        return;
+    }
+    if (!userOwnsItem(user, 'feature_autospin')) {
+        renderShop();
+        shopModal.classList.remove('hidden');
+        return;
+    }
+    if (!isAutoSpinning && user.coins < AUTO_SPIN_MIN_COINS) {
+        alert(`❌ Auto-Spin kann erst ab mindestens ${AUTO_SPIN_MIN_COINS} 🪙 Guthaben aktiviert werden!`);
+        return;
+    }
+
+    isAutoSpinning = !isAutoSpinning;
+    updateAutoSpinButtonUI(user);
+
+    if (isAutoSpinning && !isSpinning) {
+        spinBtn.click();
+    }
+});
 
 function getWeightedRandomSymbol() {
     const totalWeight = symbols.reduce((sum, s) => sum + s.weight, 0);
@@ -424,11 +676,13 @@ spinBtn.addEventListener('click', () => {
 
     const user = getCurrentUser();
     if (!user) {
+        stopAutoSpin();
         authModal.classList.remove('hidden');
         return;
     }
 
     if (user.banned) {
+        stopAutoSpin();
         statusEl.classList.remove('status-win');
         statusEl.textContent = '🚫 Ihr Account wurde gesperrt!';
         return;
@@ -437,6 +691,7 @@ spinBtn.addEventListener('click', () => {
     applyRoundedBet();
 
     if (user.coins < currentBet) {
+        stopAutoSpin();
         statusEl.classList.remove('status-win');
         statusEl.textContent = '❌ Nicht genug Guthaben für diesen Einsatz!';
         return;
@@ -460,6 +715,10 @@ spinBtn.addEventListener('click', () => {
         reel.classList.add('spinning');
     });
 
+    const hasTurbo = userOwnsItem(user, 'feature_turbo');
+    const baseDelay = hasTurbo ? 450 : 1000;
+    const stepDelay = hasTurbo ? 220 : 500;
+
     const spinIntervals = reels.map(reel => {
         const symSpan = reel.querySelector('.reel-symbol');
         return setInterval(() => {
@@ -478,7 +737,7 @@ spinBtn.addEventListener('click', () => {
 
             reel.classList.remove('spinning');
             symSpan.textContent = result.icon;
-            
+
             void reel.offsetWidth;
             reel.classList.add('landed');
 
@@ -487,8 +746,20 @@ spinBtn.addEventListener('click', () => {
                 isSpinning = false;
                 spinBtn.disabled = false;
                 betInputEl.disabled = false;
+
+                const freshUser = getCurrentUser();
+                if (isAutoSpinning) {
+                    if (!freshUser || freshUser.coins < AUTO_SPIN_MIN_COINS || freshUser.coins < currentBet) {
+                        stopAutoSpin();
+                        statusEl.textContent = `⏹️ Auto-Spin gestoppt (Guthaben unter ${AUTO_SPIN_MIN_COINS} 🪙).`;
+                    } else {
+                        setTimeout(() => {
+                            if (isAutoSpinning && !isSpinning) spinBtn.click();
+                        }, hasTurbo ? 350 : 750);
+                    }
+                }
             }
-        }, 1000 + index * 500);
+        }, baseDelay + index * stepDelay);
     });
 });
 
@@ -610,7 +881,6 @@ document.getElementById('close-broadcast').addEventListener('click', () => {
 });
 
 // ==================== 9. EXECUTIVE ADMIN KONSOLE (ROLLEN-BASIERT & ID1 OWNER) ====================
-const loginModal = document.getElementById('admin-login-modal');
 const dashboardModal = document.getElementById('admin-dashboard-modal');
 
 function openExecutiveConsole() {
@@ -620,7 +890,6 @@ function openExecutiveConsole() {
         return;
     }
 
-    if (loginModal) loginModal.classList.add('hidden');
     dashboardModal.classList.remove('hidden');
     renderAdminPlayers();
     renderActiveRigs();
@@ -636,9 +905,6 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
-if (document.getElementById('close-login-modal')) {
-    document.getElementById('close-login-modal').addEventListener('click', () => loginModal.classList.add('hidden'));
-}
 document.getElementById('close-dashboard-modal').addEventListener('click', () => dashboardModal.classList.add('hidden'));
 
 function findPlayerByIdInput(rawInput) {
@@ -783,7 +1049,6 @@ function renderAdminPlayers() {
             roleTag = `<span style="background: rgba(0,229,255,0.15); color: #00e5ff; border: 1px solid rgba(0,229,255,0.4); padding: 2px 6px; border-radius: 6px; font-size: 0.72rem; font-weight: 700;">🛡️ ADMIN</span>`;
         }
 
-        // Nur ID1 sieht den Button zum Vergeben/Entziehen von Admin-Rechten bei anderen Spielern
         let adminToggleBtn = '';
         if (canManageAdmins && !targetIsOwner) {
             adminToggleBtn = `
@@ -793,9 +1058,8 @@ function renderAdminPlayers() {
             `;
         }
 
-        // ID1 kann nicht gebannt werden
         const banBtn = targetIsOwner ? '' : `
-            <button class="mini-btn mini-ban" onclick="toggleBan('${user.id}')">${user.banned ? 'Entbannen' : 'Bannen'}</button>
+            <button class="mini-btn btn-red" onclick="toggleBan('${user.id}')">${user.banned ? 'Entbannen' : 'Bannen'}</button>
         `;
 
         const item = document.createElement('div');
@@ -811,7 +1075,7 @@ function renderAdminPlayers() {
                 <span style="color: var(--gold-light); font-size: 0.85rem; font-weight:700;">${user.coins.toLocaleString('de-DE')} 🪙</span>
             </div>
             <div class="player-actions">
-                <button class="mini-btn mini-select" onclick="selectIdForAdmin('${user.id}')">ID wählen</button>
+                <button class="mini-btn btn-blue" onclick="selectIdForAdmin('${user.id}')">ID wählen</button>
                 ${adminToggleBtn}
                 ${banBtn}
             </div>

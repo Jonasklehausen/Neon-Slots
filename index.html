@@ -3,163 +3,124 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AURELIA ROYALE | Private Gold Casino</title>
+    <title>AURELIA NEON SLOTS • Executive Club</title>
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800;900&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <!-- Firebase SDK (Compat v10 für direkte Browser-Nutzung) -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 </head>
 <body>
 
-    <!-- Globaler Admin & Winner Broadcast Banner -->
+    <!-- GLOBAL BROADCAST BANNER -->
     <div id="broadcast-banner" class="broadcast-banner hidden">
         <span id="broadcast-text"></span>
-        <button id="close-broadcast" class="close-broadcast">✕</button>
+        <button id="close-broadcast" class="close-banner-btn" type="button">✕</button>
     </div>
 
-    <!-- RIESEN MEGA-WIN VOLLBILD ANIMATION -->
-    <div id="mega-win-overlay" class="mega-win-overlay hidden">
-        <div id="confetti-container" class="confetti-container"></div>
-        <div class="mega-win-content">
-            <div id="mega-win-badge" class="mega-win-badge">MYTHIC JACKPOT 1000x</div>
-            <div id="mega-win-icons" class="mega-win-icons">🌌 🌌 🌌</div>
-            <h1 id="mega-win-title" class="mega-win-title">SENSATIONELL!</h1>
-            <div class="mega-win-amount">+<span id="mega-win-counter">0</span> 🪙</div>
-            <button id="close-mega-win" class="btn-spin" style="max-width: 260px; margin-top: 24px;">WEITER SPIELEN</button>
+    <!-- ECK-BADGE OBEN LINKS (ID & RANG) -->
+    <div id="corner-id-badge" class="corner-id-badge hidden">
+        <span class="pulse-dot"></span>
+        <span id="corner-id-text">ID1 • Spieler</span>
+    </div>
+
+    <!-- TOP HEADER LEISTE -->
+    <header class="top-bar">
+        <div class="brand-logo">
+            <span class="logo-crown">👑</span>
+            <div>
+                <h1>AURELIA NEON SLOTS</h1>
+                <span class="brand-sub">PRIVATE HIGH-LIMIT LOUNGE</span>
+            </div>
         </div>
-    </div>
 
-    <!-- Navbar -->
-    <header class="navbar">
-        <div class="logo">AURELIA<span>ROYALE</span></div>
-        
-        <div class="stats-bar">
-            <div id="user-profile-badge" class="wallet user-badge hidden">
+        <div class="top-actions">
+            <div id="user-profile-badge" class="profile-pill hidden">
                 <span id="display-user-id" class="id-tag">ID1</span>
                 <strong id="display-username">Spieler</strong>
                 <span id="display-rank-badge" class="rank-pill rank-member">👤 Member</span>
             </div>
 
-            <div class="wallet last-win-box">
-                <span>Letzter Gewinn:</span>
-                <strong id="last-win">0</strong> 🪙
-            </div>
-
-            <div class="wallet balance-box">
-                <span>Guthaben:</span>
-                <strong id="balance">0</strong> 🪙
-            </div>
-
-            <a href="#leaderboard-section" class="nav-link-btn" title="Zum Live Leaderboard">🏆 Rangliste</a>
-            <button id="logout-btn" class="logout-btn hidden" title="Ausloggen">🚪 Logout</button>
-            <button id="open-admin-btn" class="admin-trigger-btn" title="Admin Konsole öffnen">🔒 Admin</button>
+            <button id="open-admin-btn" class="admin-trigger-btn hidden" type="button">🔒 Admin</button>
+            <button id="logout-btn" class="logout-btn hidden" type="button">🚪 Logout</button>
         </div>
     </header>
 
-    <!-- Hauptbereich -->
-    <main class="container">
+    <!-- HAUPTBEREICH: SLOT MASCHINE & LEADERBOARD -->
+    <main class="main-layout">
 
-        <!-- ECHTE 3D VINTAGE SLOT MASCHINE -->
-        <div class="cabinet-wrapper">
-            <div id="slot-card" class="vintage-cabinet">
-                
-                <div class="cabinet-hood">
-                    <div class="hood-ornament">
-                        <span class="ornament-wing">❧</span>
-                        <div class="ornament-medallion">👑</div>
-                        <span class="ornament-wing">☙</span>
-                    </div>
-                    <div class="hood-title">IMPERIAL FORTUNE</div>
+        <!-- SLOT KARTE -->
+        <section id="slot-card" class="slot-card">
+            <div class="slot-header">
+                <div class="stat-box">
+                    <span class="stat-label">GUTHABEN</span>
+                    <div class="stat-value"><span id="balance">0</span> 🪙</div>
                 </div>
 
-                <div class="cabinet-body">
-                    <div class="gold-pointer-top">▼</div>
-                    
-                    <div class="reels-bezel">
-                        <div class="side-track">
-                            <span class="gem-stud"></span>
-                            <span class="gem-stud"></span>
-                            <span class="gem-stud"></span>
-                            <span class="gem-stud"></span>
-                        </div>
-
-                        <div class="reels-container">
-                            <div class="reel" id="reel1"><span class="reel-symbol">💎</span></div>
-                            <div class="reel" id="reel2"><span class="reel-symbol">7️⃣</span></div>
-                            <div class="reel" id="reel3"><span class="reel-symbol">👑</span></div>
-                        </div>
-
-                        <div class="side-track">
-                            <span class="gem-stud"></span>
-                            <span class="gem-stud"></span>
-                            <span class="gem-stud"></span>
-                            <span class="gem-stud"></span>
-                        </div>
-                    </div>
-
-                    <div class="status-plate-row">
-                        <div id="status-text" class="status-text">Einsatz wählen & Hebel ziehen!</div>
-                        <div class="coin-slot-emblem" title="Münzeinwurf">COINS</div>
-                    </div>
-                </div>
-
-                <div class="cabinet-trim-bar">
-                    <span class="chrome-switch"></span>
-                    <span class="chrome-button"></span>
-                    <span class="chrome-switch"></span>
-                </div>
-
-                <div class="cabinet-base">
-                    <div class="payout-tray">
-                        <div class="tray-lock">👁️</div>
-                        <div class="controls">
-                            <div class="bet-input-wrapper">
-                                <label for="bet-input">Einsatz (🪙):</label>
-                                <input type="number" id="bet-input" value="50" min="10" step="10">
-                            </div>
-                            <button id="spin-btn" class="btn-spin">HEBEL ZIEHEN / SPIN</button>
-                        </div>
-                    </div>
-
-                    <div class="base-royal-trim">
-                        <span class="corner-rivet"></span>
-                        <span class="base-filigree">⚜ AURELIA ROYALE ⚜</span>
-                        <span class="corner-rivet"></span>
-                    </div>
-                </div>
-
-            </div>
-
-            <div class="lever-assembly" id="lever-assembly" title="Hebel ziehen zum Drehen!">
-                <div class="lever-mount"></div>
-                <div class="lever-arm" id="lever-arm">
-                    <div class="lever-knob"></div>
+                <div class="stat-box last-win-box">
+                    <span class="stat-label">LETZTER GEWINN</span>
+                    <div class="stat-value"><span id="last-win">0</span> 🪙</div>
                 </div>
             </div>
-        </div>
 
-        <!-- Erweiterte Gewinntabelle -->
-        <div class="paytable">
-            <h3>✦ AUSZAHLUNGSTABELLE (3 GLEICHE SYMBOLE) ✦</h3>
-            <div class="paytable-grid">
-                <div class="mythic-row">🌌 🌌 🌌 (Mythisch) = <span>1000x</span></div>
-                <div class="legendary-row">👑 👑 👑 (Ultra-Selten) = <span>250x</span></div>
-                <div class="epic-row">7️⃣ 7️⃣ 7️⃣ (Jackpot) = <span>50x</span></div>
-                <div>💎 💎 💎 (Selten) = <span>15x</span></div>
-                <div>🔔 🔔 🔔 = <span>5x</span></div>
-                <div>🍒 / 🍋 = <span>2x - 3x</span></div>
-            </div>
-        </div>
-
-        <!-- LIVE HIGH-ROLLER LEADERBOARD -->
-        <section id="leaderboard-section" class="leaderboard-card">
-            <div class="leaderboard-header">
-                <div>
-                    <span class="subtitle-crown" style="margin-bottom: 2px;">✦ HALL OF FAME ✦</span>
-                    <h2>LIVE HIGH-ROLLER LEADERBOARD</h2>
+            <!-- WALZEN & HEBEL -->
+            <div class="machine-stage">
+                <div class="reels-frame">
+                    <div class="reel" id="reel1"><span class="reel-symbol">7️⃣</span></div>
+                    <div class="reel" id="reel2"><span class="reel-symbol">💎</span></div>
+                    <div class="reel" id="reel3"><span class="reel-symbol">👑</span></div>
                 </div>
-                <span class="live-indicator"><span class="pulse-dot"></span> CLOUD LIVE</span>
+
+                <!-- 1-ARMIGER BANDIT HEBEL -->
+                <div id="lever-assembly" class="lever-assembly" title="Hebel ziehen">
+                    <div class="lever-base"></div>
+                    <div id="lever-arm" class="lever-arm">
+                        <div class="lever-knob"></div>
+                    </div>
+                </div>
             </div>
 
-            <div class="leaderboard-table-wrapper">
+            <div id="status-text" class="status-banner">Bereit für Ihren nächsten Spin!</div>
+
+            <!-- EINSATZ & STEUERUNG -->
+            <div class="controls-area">
+                <div class="bet-control">
+                    <label for="bet-input">EINSATZ (MIN. 1 🪙)</label>
+                    <input type="number" id="bet-input" value="50" min="1" step="1">
+                </div>
+
+                <button id="spin-btn" class="spin-btn" type="button">🎰 DREHEN</button>
+            </div>
+
+            <!-- AUTO-SPIN, COIN-SHOP & 5-MINUTEN-BONUS -->
+            <div class="sub-controls-row">
+                <button id="auto-spin-btn" class="secondary-btn" type="button">🤖 Auto-Spin (🔒 1.500 🪙 im Shop)</button>
+                <button id="open-shop-btn" class="secondary-btn shop-open-btn" type="button">🛒 Coin-Shop</button>
+            </div>
+
+            <div id="passive-timer-badge" class="passive-timer-badge">
+                ⏳ Gratis-Bonus: +10 🪙 in <strong id="passive-timer-text">05:00</strong>
+            </div>
+
+            <!-- GEWINNTABELLE -->
+            <div class="paytable-strip">
+                <span>🍒 2x</span>
+                <span>🍋 3x</span>
+                <span>🔔 5x</span>
+                <span>💎 15x</span>
+                <span>7️⃣ 50x</span>
+                <span>👑 250x</span>
+                <span>🌌 1000x</span>
+            </div>
+        </section>
+
+        <!-- LIVE LEADERBOARD -->
+        <section class="leaderboard-card">
+            <div class="lb-header">
+                <h2>🏆 Live High-Roller Leaderboard</h2>
+                <span class="live-tag">● LIVE CLOUD</span>
+            </div>
+
+            <div class="table-wrapper">
                 <table class="leaderboard-table">
                     <thead>
                         <tr>
@@ -167,7 +128,7 @@
                             <th>ID</th>
                             <th>Spieler</th>
                             <th>Rang</th>
-                            <th style="text-align: right;">Vermögen</th>
+                            <th style="text-align: right;">Guthaben</th>
                         </tr>
                     </thead>
                     <tbody id="leaderboard-body"></tbody>
@@ -176,151 +137,142 @@
         </section>
     </main>
 
-    <div id="corner-id-badge" class="corner-id-badge hidden">
-        Mitglieds-ID: <strong id="corner-id-text">ID1</strong>
-    </div>
-
-    <footer>
-        <p>© 2026 AURELIA ROYALE – Exklusive Unterhaltung (Spielgeld).</p>
-    </footer>
-
-    <!-- ==================== SPIELER LOGIN / REGISTRIERUNG MODAL ==================== -->
+    <!-- LOGIN / REGISTRIERUNG MODAL -->
     <div id="auth-modal" class="modal-overlay">
-        <div class="modal-box auth-box">
+        <div class="modal-card auth-card">
             <div class="auth-tabs">
-                <button id="tab-login" class="auth-tab active">Einloggen</button>
-                <button id="tab-register" class="auth-tab">Account erstellen</button>
+                <button id="tab-login" class="auth-tab active" type="button">Einloggen</button>
+                <button id="tab-register" class="auth-tab" type="button">Account erstellen</button>
             </div>
 
             <h2 id="auth-title">Willkommen im Club</h2>
-            <p id="auth-subtitle" class="modal-desc">Melden Sie sich mit Ihrem Usernamen und Passwort an.</p>
+            <p id="auth-subtitle" class="modal-sub">Melden Sie sich mit Ihrem Usernamen und Passwort an.</p>
 
             <div class="form-group">
-                <label>Username:</label>
-                <input type="text" id="auth-username" placeholder="z. B. Lukas99" class="admin-input">
+                <label for="auth-username">Username</label>
+                <input type="text" id="auth-username" placeholder="z. B. Jonas" autocomplete="username">
             </div>
 
             <div class="form-group">
-                <label>Passwort:</label>
-                <input type="password" id="auth-password" placeholder="••••••••" class="admin-input">
+                <label for="auth-password">Passwort</label>
+                <input type="password" id="auth-password" placeholder="••••••••" autocomplete="current-password">
             </div>
 
-            <p id="auth-error" class="error-text hidden"></p>
+            <p id="auth-error" class="error-msg hidden"></p>
 
-            <button id="auth-submit-btn" class="btn-spin" style="margin-top: 12px;">EINLOGGEN</button>
+            <button id="auth-submit-btn" class="primary-btn full-width" type="button">EINLOGGEN</button>
+            <p class="security-hint">🔒 Alle Passwörter werden vor der Speicherung per SHA-256 gehasht. Bitte nutzen Sie kein Passwort von anderen Diensten.</p>
         </div>
     </div>
 
-    <!-- ==================== ADMIN LOGIN MODAL ==================== -->
-    <div id="admin-login-modal" class="modal-overlay hidden">
-        <div class="modal-box login-box">
+    <!-- COIN SHOP MODAL -->
+    <div id="shop-modal" class="modal-overlay hidden">
+        <div class="modal-card shop-modal-card">
             <div class="modal-header">
-                <h2>🔐 Tresor & Admin-Zugang</h2>
-                <button class="close-modal" id="close-login-modal">✕</button>
+                <h2>🛒 Neon Coin-Shop</h2>
+                <button id="close-shop-btn" class="close-modal-btn" type="button">✕</button>
             </div>
-            <p class="modal-desc">Master-Passwort eingeben:</p>
-            <input type="password" id="admin-password-input" placeholder="Passwort..." class="admin-input">
-            <p id="login-error" class="error-text hidden">❌ Falsches Admin-Passwort!</p>
-            <button id="admin-login-submit" class="btn-admin-gold" style="width: 100%;">Konsole entsperren</button>
+
+            <div class="shop-balance-bar">
+                Dein aktuelles Guthaben: <strong id="shop-balance-display">0</strong> 🪙
+            </div>
+
+            <div id="shop-items-container" class="shop-grid"></div>
         </div>
     </div>
 
-    <!-- ==================== ADMIN DASHBOARD MODAL ==================== -->
+    <!-- EXECUTIVE ADMIN KONSOLE MODAL -->
     <div id="admin-dashboard-modal" class="modal-overlay hidden">
-        <div class="modal-box dashboard-box">
+        <div class="modal-card admin-dashboard-card">
             <div class="modal-header">
-                <h2>👑 AURELIA ROYALE – EXECUTIVE ADMIN CONSOLE</h2>
-                <button class="close-modal" id="close-dashboard-modal">✕</button>
+                <h2>🛡️ Executive Admin Konsole</h2>
+                <button id="close-dashboard-modal" class="close-modal-btn" type="button">✕</button>
             </div>
 
             <div class="admin-grid">
-                <div class="admin-card">
-                    <h3>💰 Coins & Ränge per ID vergeben</h3>
-                    <p class="small-info">Gib eine ID ein (z. B. <strong>ID1</strong>) für Coins oder Rang-Upgrade:</p>
-                    
-                    <div class="btn-row" style="margin-bottom: 10px;">
-                        <input type="text" id="target-id-input" placeholder="ID (z. B. ID1)" class="admin-input" style="max-width: 120px;">
-                        <input type="number" id="admin-coin-amount" value="500" step="100" class="admin-input" placeholder="Betrag">
-                    </div>
+                <!-- COINS & RÄNGE VERWALTEN -->
+                <div class="admin-box">
+                    <h3>💰 Guthaben & Ränge</h3>
+                    <input type="text" id="target-id-input" placeholder="Ziel-ID (z. B. ID1)">
+                    <input type="number" id="admin-coin-amount" placeholder="Betrag (z. B. 5000)">
 
                     <div class="btn-row">
-                        <button id="admin-give-coins" class="btn-admin-success">+ Geben</button>
-                        <button id="admin-remove-coins" class="btn-admin-danger">- Abziehen</button>
-                        <button id="admin-set-coins" class="btn-admin-primary">= Setzen</button>
+                        <button id="admin-give-coins" class="mini-btn btn-green" type="button">+ Geben</button>
+                        <button id="admin-remove-coins" class="mini-btn btn-red" type="button">- Abziehen</button>
+                        <button id="admin-set-coins" class="mini-btn btn-blue" type="button">= Setzen</button>
                     </div>
 
-                    <hr class="admin-divider">
-
-                    <h3>🎖️ Exklusiven Rang zuweisen</h3>
-                    <div class="btn-row">
-                        <select id="admin-rank-select" class="admin-input">
-                            <option value="member">👤 Member (+0% Bonus)</option>
-                            <option value="bronze">🥉 Bronze Club (+5% Bonus)</option>
-                            <option value="silver">🥈 Silver Lounge (+10% Bonus)</option>
-                            <option value="gold">🥇 Gold Reserve (+15% Bonus)</option>
-                            <option value="diamond">💎 Diamond Elite (+25% Bonus)</option>
-                            <option value="royal">👑 Royal High-Roller (+40% Bonus)</option>
-                            <option value="emperor">⚡ Aurelia Emperor (+50% Bonus)</option>
+                    <div class="rank-row">
+                        <select id="admin-rank-select">
+                            <option value="member">👤 Member (1.00x)</option>
+                            <option value="bronze">🥉 Bronze Club (1.05x)</option>
+                            <option value="silver">🥈 Silver Lounge (1.10x)</option>
+                            <option value="gold">🥇 Gold Reserve (1.15x)</option>
+                            <option value="diamond">💎 Diamond Elite (1.25x)</option>
+                            <option value="royal">👑 Royal High-Roller (1.40x)</option>
+                            <option value="emperor">⚡ Aurelia Emperor (1.50x)</option>
                         </select>
-                        <button id="admin-set-rank-btn" class="btn-admin-gold">Rang setzen</button>
-                    </div>
-
-                    <hr class="admin-divider">
-
-                    <h3>🎁 Community-Event (Alle Spieler)</h3>
-                    <div class="btn-row">
-                        <input type="number" id="rain-amount-input" value="1000" step="100" class="admin-input">
-                        <button id="admin-rain-btn" class="btn-admin-gold">🌧️ Coin-Rain an ALLE</button>
+                        <button id="admin-set-rank-btn" class="mini-btn btn-gold" type="button">Rang setzen</button>
                     </div>
                 </div>
 
-                <div class="admin-card">
-                    <h3>🎯 Nächsten Spin für bestimmten User triggern</h3>
-                    <p class="small-info">Wähle eine User-ID und bestimme exakt, was er beim nächsten Spin hittet:</p>
-                    
-                    <div class="form-group">
-                        <label>Ziel-User ID (z. B. ID1):</label>
-                        <input type="text" id="rig-user-id-input" placeholder="ID1" class="admin-input">
-                    </div>
-
-                    <div class="form-group">
-                        <label>Gewünschtes Ergebnis:</label>
-                        <select id="rig-outcome-select" class="admin-input">
-                            <option value="cosmic">🌌 1000x COSMIC DRAGON (Mythisch)</option>
-                            <option value="crown">👑 250x GOD CROWN (Ultra-Selten)</option>
-                            <option value="seven">7️⃣ 50x LUCKY SEVEN (Jackpot)</option>
-                            <option value="diamond">💎 15x DIAMANTEN (Mega Hit)</option>
-                            <option value="lose">💀 Garantierte Niete</option>
+                <!-- SPIN MANIPULATION & COIN RAIN -->
+                <div class="admin-box">
+                    <h3>🎯 Spin-Steuerung & Events</h3>
+                    <input type="text" id="rig-user-id-input" placeholder="Spieler-ID (z. B. ID1)">
+                    <div class="rank-row">
+                        <select id="rig-outcome-select">
+                            <option value="lose">💀 Niete (Verlust)</option>
+                            <option value="cherry">🍒 3x Kirsche (2x)</option>
+                            <option value="lemon">🍋 3x Zitrone (3x)</option>
+                            <option value="bell">🔔 3x Glocke (5x)</option>
+                            <option value="diamond">💎 3x Diamant (15x)</option>
+                            <option value="seven">7️⃣ 3x Sieben (50x)</option>
+                            <option value="crown">👑 3x Krone (250x)</option>
+                            <option value="cosmic">🌌 3x Cosmic (1000x)</option>
                         </select>
+                        <button id="trigger-user-spin-btn" class="mini-btn btn-gold" type="button">Programmieren</button>
                     </div>
+                    <div id="active-rigs-list" class="active-rigs-box"></div>
 
-                    <button id="trigger-user-spin-btn" class="btn-admin-gold" style="width: 100%;">⚡ Nächsten Spin für User programmieren</button>
-                    <div id="active-rigs-list" class="active-rigs-list"></div>
+                    <div class="rank-row" style="margin-top: 10px;">
+                        <input type="number" id="rain-amount-input" placeholder="Coin-Rain (z. B. 1000)">
+                        <button id="admin-rain-btn" class="mini-btn btn-green" type="button">🌧️ Coin-Rain</button>
+                    </div>
                 </div>
 
-                <div class="admin-card">
-                    <h3>👥 Registrierte Accounts (<span id="total-users-count">0</span>)</h3>
+                <!-- SPIELERVERWALTUNG (INKL. + ADMIN / - ADMIN FÜR ID1) -->
+                <div class="admin-box full-span">
+                    <h3>👥 Registrierte Spieler (<span id="total-users-count">0</span>)</h3>
                     <div id="player-list-container" class="player-list"></div>
                 </div>
 
-                <div class="admin-card">
-                    <h3>📢 Globaler Server-Broadcast</h3>
-                    <div class="btn-row" style="margin-bottom: 15px;">
-                        <input type="text" id="admin-broadcast-input" placeholder="Nachricht an alle..." class="admin-input">
-                        <button id="send-broadcast-btn" class="btn-admin-gold" style="flex: 0 0 auto;">Senden</button>
+                <!-- BROADCAST & LOGS -->
+                <div class="admin-box full-span">
+                    <h3>📢 Globaler Broadcast & System-Logs</h3>
+                    <div class="rank-row">
+                        <input type="text" id="admin-broadcast-input" placeholder="Nachricht an alle Spieler senden...">
+                        <button id="send-broadcast-btn" class="mini-btn btn-blue" type="button">Senden</button>
+                        <button id="clear-logs-btn" class="mini-btn btn-red" type="button">Logs löschen</button>
                     </div>
-
-                    <h3>📟 Live Admin & Server-Logs</h3>
-                    <div id="admin-logs" class="admin-logs"></div>
-                    <button id="clear-logs-btn" class="btn-admin-secondary" style="margin-top: 8px;">Logs leeren</button>
+                    <div id="admin-logs" class="logs-box"></div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+    <!-- MEGA WIN OVERLAY -->
+    <div id="mega-win-overlay" class="mega-win-overlay hidden">
+        <div id="confetti-container" class="confetti-container"></div>
+        <div class="mega-win-card">
+            <div id="mega-win-badge" class="mega-badge">💎 SUPER HIT 💎</div>
+            <div id="mega-win-icons" class="mega-icons">💎 💎 💎</div>
+            <h2 id="mega-win-title">BIG WIN!</h2>
+            <div class="mega-amount">+<span id="mega-win-counter">0</span> 🪙</div>
+            <button id="close-mega-win" class="primary-btn" type="button">WEITER SPIELEN</button>
+        </div>
+    </div>
+
     <script src="script.js"></script>
 </body>
 </html>
