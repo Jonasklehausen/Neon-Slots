@@ -1187,3 +1187,8 @@ body.troll-drunk main.container {
 body.troll-earthquake {
     animation: trollEarthquake 0.35s infinite linear;
 }
+/* ==================== ADMIN DASHBOARD SCROLL & TROLL FIX ==================== */
+#admin-dashboard-modal .dashboard-box {
+    max-height: 90vh;
+    overflow-y: auto;
+}
