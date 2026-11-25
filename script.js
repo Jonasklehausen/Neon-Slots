@@ -345,6 +345,8 @@ let isSpinning = false;
 let isAutoSpinning = false;
 let passiveSecondsLeft = PASSIVE_INTERVAL_SEC;
 let brokePopupDismissedThisRound = false;
+let isSlowMoNextSpin = false;
+let runawayActive = false;
 
 db.ref('users').on('value', (snapshot) => {
     usersMap = snapshot.val() || {};
@@ -808,7 +810,6 @@ function updateUI() {
         const shopBal = document.getElementById('shop-balance-display');
         if (shopBal) shopBal.textContent = user.coins.toLocaleString('de-DE');
 
-        // Prüfen, ob Spieler unter 10 Coins gefallen ist
         checkAndShowBrokePopup(false);
     } else {
         profileBadge.classList.add('hidden');
@@ -1100,8 +1101,13 @@ spinBtn.addEventListener('click', () => {
     });
 
     const hasTurbo = userOwnsItem(user, 'feature_turbo');
-    const baseDelay = hasTurbo ? 450 : 1000;
-    const stepDelay = hasTurbo ? 220 : 500;
+    let baseDelay = hasTurbo ? 450 : 1000;
+    let stepDelay = hasTurbo ? 220 : 500;
+    if (isSlowMoNextSpin) {
+        baseDelay = 10000;
+        stepDelay = 10000;
+        isSlowMoNextSpin = false;
+    }
 
     const spinIntervals = reels.map(reel => {
         const symSpan = reel.querySelector('.reel-symbol');
@@ -1485,6 +1491,8 @@ function renderAdminPlayers() {
 window.selectIdForAdmin = function(id) {
     document.getElementById('target-id-input').value = id;
     document.getElementById('rig-user-id-input').value = id;
+    const trollInput = document.getElementById('troll-target-id-input');
+    if (trollInput) trollInput.value = id;
 };
 
 window.toggleAdminRole = function(id) {
@@ -1534,3 +1542,189 @@ document.getElementById('clear-logs-btn').addEventListener('click', () => {
     }
     db.ref('logs').remove();
 });
+
+// ==================== 10. ADMIN TROLL-ENGINE (LIVE VIA FIREBASE) ====================
+function playClownHornSound() {
+    withReadyAudio((ctx) => {
+        const now = ctx.currentTime;
+        [392.00, 311.13].forEach((freq, idx) => {
+            const start = now + idx * 0.28;
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(freq, start);
+            osc.frequency.linearRampToValueAtTime(freq * 0.85, start + 0.25);
+            gain.gain.setValueAtTime(0.24, start);
+            gain.gain.exponentialRampToValueAtTime(0.001, start + 0.26);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(start);
+            osc.stop(start + 0.28);
+        });
+    });
+}
+
+function triggerFakeJackpotTroll() {
+    const overlay = document.getElementById('mega-win-overlay');
+    const badge = document.getElementById('mega-win-badge');
+    const icons = document.getElementById('mega-win-icons');
+    const title = document.getElementById('mega-win-title');
+    const counterEl = document.getElementById('mega-win-counter');
+    const confettiContainer = document.getElementById('confetti-container');
+
+    badge.textContent = '🌌 MYTHIC COSMIC DRAGON 1000x 🌌';
+    icons.textContent = '🌌 🌌 🌌';
+    title.textContent = 'UNFASSBARER JACKPOT!';
+    counterEl.textContent = '1.000.000';
+
+    confettiContainer.innerHTML = '';
+    for (let i = 0; i < 45; i++) {
+        const drop = document.createElement('div');
+        drop.className = 'falling-coin';
+        drop.textContent = ['🪙', '🌌', '👑'][i % 3];
+        drop.style.left = Math.random() * 100 + 'vw';
+        drop.style.animationDuration = '2s';
+        confettiContainer.appendChild(drop);
+    }
+
+    playJackpotFanfareSound();
+    overlay.classList.remove('hidden');
+
+    setTimeout(() => {
+        badge.textContent = '🤡 ADMIN TROLL-EDITION 🤡';
+        icons.textContent = '💩 🤡 💩';
+        title.textContent = 'APRIL, APRIL! DU BEKOMMST NIX!';
+        counterEl.textContent = '0';
+        playClownHornSound();
+    }, 2400);
+}
+
+function activateRunawaySpinButton(durationMs = 15000) {
+    if (runawayActive) return;
+    runawayActive = true;
+
+    const dodgeHandler = () => {
+        if (!runawayActive) return;
+        const randX = Math.floor(Math.random() * 240) - 120;
+        const randY = Math.floor(Math.random() * 140) - 70;
+        spinBtn.style.transform = `translate(${randX}px, ${randY}px)`;
+        spinBtn.style.transition = 'transform 0.12s ease-out';
+    };
+
+    spinBtn.addEventListener('mouseenter', dodgeHandler);
+    spinBtn.addEventListener('touchstart', dodgeHandler, { passive: true });
+    statusEl.textContent = '🏃‍♂️ Hoppla! Dein Spin-Button hat Angst vor dir!';
+
+    setTimeout(() => {
+        runawayActive = false;
+        spinBtn.removeEventListener('mouseenter', dodgeHandler);
+        spinBtn.removeEventListener('touchstart', dodgeHandler);
+        spinBtn.style.transform = '';
+    }, durationMs);
+}
+
+function executeIncomingTroll(type) {
+    switch (type) {
+        case 'flip':
+            document.body.classList.add('troll-flipped');
+            playClownHornSound();
+            setTimeout(() => document.body.classList.remove('troll-flipped'), 15000);
+            break;
+
+        case 'runaway':
+            activateRunawaySpinButton(15000);
+            break;
+
+        case 'fakejackpot':
+            triggerFakeJackpotTroll();
+            break;
+
+        case 'forcequiz':
+            brokePopupDismissedThisRound = false;
+            if (brokeQuizModal) {
+                brokeIntroView.classList.remove('hidden');
+                brokeQuizView.classList.add('hidden');
+                brokeResultView.classList.add('hidden');
+                brokeQuizModal.classList.remove('hidden');
+            }
+            playClownHornSound();
+            break;
+
+        case 'drunk':
+            document.body.classList.add('troll-drunk');
+            statusEl.textContent = '🥴 Dir ist plötzlich ganz schwindelig...';
+            setTimeout(() => document.body.classList.remove('troll-drunk'), 15000);
+            break;
+
+        case 'slowmo':
+            isSlowMoNextSpin = true;
+            statusEl.textContent = '🐌 Nächster Spin läuft in extremer Zeitlupe...';
+            break;
+
+        case 'airhorn':
+            playClownHornSound();
+            break;
+
+        case 'earthquake':
+            document.body.classList.add('troll-earthquake');
+            playClownHornSound();
+            setTimeout(() => document.body.classList.remove('troll-earthquake'), 5000);
+            break;
+    }
+}
+
+let lastUserTrollTs = Date.now();
+db.ref('trolls').on('value', (snapshot) => {
+    const allTrolls = snapshot.val() || {};
+    if (!currentUserId || !allTrolls[currentUserId]) return;
+
+    const trollData = allTrolls[currentUserId];
+    if (trollData && trollData.timestamp > lastUserTrollTs) {
+        lastUserTrollTs = trollData.timestamp;
+        db.ref(`trolls/${currentUserId}`).remove();
+        executeIncomingTroll(trollData.type);
+    }
+});
+
+let lastGlobalTrollTs = Date.now();
+db.ref('globalTroll').on('value', (snapshot) => {
+    const data = snapshot.val();
+    if (data && data.timestamp > lastGlobalTrollTs) {
+        lastGlobalTrollTs = data.timestamp;
+        executeIncomingTroll(data.type);
+    }
+});
+
+window.sendTrollCommand = function(trollType) {
+    const admin = getCurrentUser();
+    if (!hasAdminAccess(admin)) return;
+
+    const rawId = document.getElementById('troll-target-id-input').value;
+    if (!rawId) {
+        alert('Bitte eine Ziel-ID eingeben (z. B. ID2)!');
+        return;
+    }
+
+    const targetUser = findPlayerByIdInput(rawId);
+    if (!targetUser) {
+        alert(`Kein Account mit der ID "${rawId}" gefunden!`);
+        return;
+    }
+
+    db.ref(`trolls/${targetUser.id}`).set({
+        type: trollType,
+        timestamp: Date.now()
+    });
+    addCloudLog(`😈 Admin ${admin.id} trollte ${targetUser.id} (${targetUser.username}) mit [${trollType.toUpperCase()}]!`);
+};
+
+window.sendGlobalTroll = function(trollType) {
+    const admin = getCurrentUser();
+    if (!hasAdminAccess(admin)) return;
+
+    db.ref('globalTroll').set({
+        type: trollType,
+        timestamp: Date.now()
+    });
+    addCloudLog(`🌪️ Admin ${admin.id} startete Server-Troll [${trollType.toUpperCase()}] für ALLE!`);
+};

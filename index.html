@@ -209,7 +209,7 @@
 
             <div class="form-group">
                 <label for="auth-username">Username:</label>
-                <input type="text" id="auth-username" placeholder="z. B. Lukas99" class="admin-input" autocomplete="username">
+                <input type="text" id="auth-username" placeholder="z. B. Lukas99" maxlength="24" class="admin-input" autocomplete="username">
             </div>
 
             <div class="form-group">
@@ -283,6 +283,27 @@
             </div>
 
             <div class="admin-grid">
+                                <!-- NEUE TROLL-KONSOLE -->
+                <div class="admin-card" style="grid-column: 1 / -1; border-color: rgba(239, 68, 68, 0.45);">
+                    <h3>😈 Troll-Zentrale (Live-Trolling)</h3>
+                    <p class="small-info">Wähle eine Ziel-ID (z. B. <strong>ID2</strong>) für Einzel-Trolls oder nutze den Server-Troll:</p>
+
+                    <div class="btn-row" style="margin-bottom: 10px;">
+                        <input type="text" id="troll-target-id-input" placeholder="Ziel-ID (z. B. ID2)" class="admin-input" style="max-width: 160px;">
+                        <button class="btn-admin-danger" type="button" onclick="sendTrollCommand('flip')">🙃 Bildschirm 180° drehen (15s)</button>
+                        <button class="btn-admin-danger" type="button" onclick="sendTrollCommand('runaway')">🏃‍♂️ Spin-Button flieht (15s)</button>
+                        <button class="btn-admin-danger" type="button" onclick="sendTrollCommand('fakejackpot')">🌌 Fake 1000x Jackpot</button>
+                    </div>
+
+                    <div class="btn-row">
+                        <button class="btn-admin-danger" type="button" onclick="sendTrollCommand('forcequiz')">🤡 Penner-Quiz aufzwingen</button>
+                        <button class="btn-admin-danger" type="button" onclick="sendTrollCommand('drunk')">🫠 Betrunkener Modus (15s)</button>
+                        <button class="btn-admin-danger" type="button" onclick="sendTrollCommand('slowmo')">🐌 30s Zeitlupen-Spin</button>
+                        <button class="btn-admin-danger" type="button" onclick="sendTrollCommand('airhorn')">📯 Clown-Horn Sound</button>
+                        <button class="btn-admin-gold" type="button" onclick="sendGlobalTroll('earthquake')">🌪️ Server-Erdbeben (ALLE)</button>
+                    </div>
+                </div>
+
                 <div class="admin-card">
                     <h3>💰 Coins & Ränge per ID vergeben</h3>
                     <p class="small-info">Gib eine ID ein (z. B. <strong>ID1</strong>) für Coins oder Rang-Upgrade:</p>
@@ -328,12 +349,12 @@
                     <p class="small-info">Wähle eine User-ID und bestimme exakt, was er beim nächsten Spin hittet:</p>
                     
                     <div class="form-group">
-                        <label>Ziel-User ID (z. B. ID1):</label>
+                        <label for="rig-user-id-input">Ziel-User ID (z. B. ID1):</label>
                         <input type="text" id="rig-user-id-input" placeholder="ID1" class="admin-input">
                     </div>
 
                     <div class="form-group">
-                        <label>Gewünschtes Ergebnis:</label>
+                        <label for="rig-outcome-select">Gewünschtes Ergebnis:</label>
                         <select id="rig-outcome-select" class="admin-input">
                             <option value="cosmic">🌌 1000x COSMIC DRAGON (Mythisch)</option>
                             <option value="crown">👑 250x GOD CROWN (Ultra-Selten)</option>

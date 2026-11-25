@@ -66,5 +66,6 @@ Zugänglich über den **`🔒 Admin`**-Button in der Navbar oder per Shortcut (*
 
 1. **Repository klonen:**
    ```bash
-   git clone [https://github.com/Jonasklehausen/Neon-Slots.git](https://github.com/Jonasklehausen/Neon-Slots.git)
+   git clone https://github.com/Jonasklehausen/Neon-Slots.git
    cd Neon-Slots
+   ```
