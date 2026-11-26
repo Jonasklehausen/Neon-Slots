@@ -307,12 +307,15 @@
                 <span class="live-indicator"><span class="pulse-dot"></span> LIVE CHAT</span>
             </div>
 
-            <div id="chat-messages" class="chat-messages"></div>
+            <div id="chat-messages" class="chat-messages">
+                <div class="chat-empty">Chat wird geladen...</div>
+            </div>
 
             <div class="chat-input-row">
-                <input type="text" id="chat-input" class="admin-input" maxlength="220" placeholder="Nachricht an alle Spieler schreiben..." autocomplete="off">
-                <button id="chat-send-btn" class="btn-admin-gold" type="button">💬 Senden</button>
+                <input type="text" id="chat-input" class="admin-input chat-input" maxlength="220" placeholder="Nachricht an alle Spieler schreiben..." autocomplete="off">
+                <button id="chat-send-btn" class="btn-admin-gold chat-send-btn" type="button">💬 Senden</button>
             </div>
+            <p id="chat-status" class="chat-status hidden"></p>
         </section>
     </main>
 

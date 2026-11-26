@@ -1531,16 +1531,38 @@ body.troll-earthquake {
 }
 
 .chat-messages {
-    background: rgba(5, 5, 6, 0.78);
-    border: 1px solid rgba(212, 175, 55, 0.22);
+    background: rgba(5, 5, 6, 0.85);
+    border: 1px solid rgba(212, 175, 55, 0.25);
     border-radius: 14px;
     padding: 12px 14px;
-    height: 240px;
+    height: 250px;
     overflow-y: auto;
+    scroll-behavior: auto;
     display: flex;
     flex-direction: column;
     gap: 8px;
     margin-bottom: 12px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(212, 175, 55, 0.45) rgba(10, 10, 12, 0.6);
+}
+
+.chat-messages::-webkit-scrollbar {
+    width: 8px;
+}
+
+.chat-messages::-webkit-scrollbar-track {
+    background: rgba(10, 10, 12, 0.6);
+    border-radius: 999px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb {
+    background: rgba(212, 175, 55, 0.42);
+    border-radius: 999px;
+    border: 2px solid transparent;
+}
+
+.chat-messages::-webkit-scrollbar-thumb:hover {
+    background: rgba(212, 175, 55, 0.7);
 }
 
 .chat-empty {
@@ -1551,27 +1573,30 @@ body.troll-earthquake {
 }
 
 .chat-msg {
+    flex-shrink: 0;
     display: flex;
     flex-wrap: wrap;
-    align-items: baseline;
+    align-items: center;
     gap: 6px;
-    padding: 7px 10px;
+    padding: 8px 11px;
     border-radius: 10px;
     background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(212, 175, 55, 0.1);
+    border: 1px solid rgba(212, 175, 55, 0.12);
     font-size: 0.9rem;
     line-height: 1.4;
     word-break: break-word;
+    overflow-wrap: anywhere;
 }
 
 .chat-msg.is-me {
     background: rgba(212, 175, 55, 0.09);
-    border-color: rgba(212, 175, 55, 0.3);
+    border-color: rgba(212, 175, 55, 0.32);
 }
 
 .chat-time {
     font-size: 0.72rem;
     color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
 }
 
 .chat-user {
@@ -1585,8 +1610,38 @@ body.troll-earthquake {
 
 .chat-input-row {
     display: flex;
-    gap: 8px;
+    gap: 10px;
+    align-items: stretch;
+    width: 100%;
+}
+
+.chat-input {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: auto;
+    height: 42px;
+    line-height: 1.25;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.chat-send-btn {
+    flex: 0 0 auto;
+    height: 42px;
+    padding: 0 18px;
+    display: inline-flex;
     align-items: center;
+    justify-content: center;
+    gap: 6px;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.chat-status {
+    margin-top: 8px;
+    font-size: 0.84rem;
+    font-weight: 700;
+    color: #f87171;
 }
 
 /* ==================== FAKE-BAN OVERLAY ==================== */

@@ -2629,14 +2629,24 @@ window.sendGlobalTroll = function(trollType) {
 const chatMessagesEl = document.getElementById('chat-messages');
 const chatInputEl = document.getElementById('chat-input');
 const chatSendBtn = document.getElementById('chat-send-btn');
+const chatStatusEl = document.getElementById('chat-status');
 let lastChatSentAt = 0;
 
-db.ref('chat').limitToLast(50).on('value', (snapshot) => {
-    if (!chatMessagesEl) return;
-    const chatData = snapshot.val() || {};
-    const messages = Object.values(chatData).sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+function showChatStatus(msg) {
+    if (!chatStatusEl) return;
+    if (!msg) {
+        chatStatusEl.textContent = '';
+        chatStatusEl.classList.add('hidden');
+        return;
+    }
+    chatStatusEl.textContent = msg;
+    chatStatusEl.classList.remove('hidden');
+}
 
+function renderChatMessagesList(messages) {
+    if (!chatMessagesEl) return;
     chatMessagesEl.innerHTML = '';
+
     if (messages.length === 0) {
         const emptyDiv = document.createElement('div');
         emptyDiv.className = 'chat-empty';
@@ -2676,16 +2686,38 @@ db.ref('chat').limitToLast(50).on('value', (snapshot) => {
     });
 
     chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
-});
+}
 
-function sendChatMessage() {
+db.ref('chat').limitToLast(50).on(
+    'value',
+    (snapshot) => {
+        showChatStatus('');
+        const chatData = snapshot.val() || {};
+        const messages = Object.values(chatData).sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+        renderChatMessagesList(messages);
+    },
+    (err) => {
+        console.error('Chat read error:', err);
+        if (chatMessagesEl) {
+            chatMessagesEl.innerHTML = '';
+            const errDiv = document.createElement('div');
+            errDiv.className = 'chat-empty';
+            errDiv.style.color = '#f87171';
+            errDiv.textContent = `❌ Chat konnte nicht geladen werden (${err.code || err.message}). Firebase-Regeln prüfen!`;
+            chatMessagesEl.appendChild(errDiv);
+        }
+    }
+);
+
+async function sendChatMessage() {
     const user = getCurrentUser();
     if (!user) {
+        showChatStatus('⚠️ Bitte zuerst einloggen, um zu chatten.');
         authModal.classList.remove('hidden');
         return;
     }
     if (user.banned) {
-        alert('🚫 Gesperrte Accounts können nicht chatten!');
+        showChatStatus('🚫 Gesperrte Accounts können nicht chatten!');
         return;
     }
     if (!chatInputEl) return;
@@ -2694,19 +2726,28 @@ function sendChatMessage() {
     if (!text) return;
 
     const now = Date.now();
-    if (now - lastChatSentAt < 700) return;
+    if (now - lastChatSentAt < 500) return;
     lastChatSentAt = now;
 
-    db.ref('chat').push({
-        userId: user.id,
-        username: user.username,
-        rank: user.rank || 'member',
-        isAdmin: hasAdminAccess(user),
-        text: text.slice(0, 220),
-        timestamp: now
-    });
+    showChatStatus('');
+    if (chatSendBtn) chatSendBtn.disabled = true;
 
-    chatInputEl.value = '';
+    try {
+        await db.ref('chat').push({
+            userId: String(user.id || ''),
+            username: String(user.username || 'Spieler'),
+            rank: String(user.rank || 'member'),
+            isAdmin: Boolean(hasAdminAccess(user)),
+            text: text.slice(0, 220),
+            timestamp: now
+        });
+        chatInputEl.value = '';
+    } catch (err) {
+        console.error('Chat send error:', err);
+        showChatStatus(`❌ Senden fehlgeschlagen: ${err.code || err.message || 'Firebase-Regeln prüfen!'}`);
+    } finally {
+        if (chatSendBtn) chatSendBtn.disabled = false;
+    }
 }
 
 if (chatSendBtn) {
@@ -2714,7 +2755,7 @@ if (chatSendBtn) {
 }
 if (chatInputEl) {
     chatInputEl.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
+        if (e.key === 'Enter' || e.keyCode === 13) {
             e.preventDefault();
             sendChatMessage();
         }
