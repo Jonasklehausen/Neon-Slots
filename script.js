@@ -300,6 +300,14 @@ const BOOSTERS = {
         durationSec: 120,
         price: 6000,
         desc: 'Verdoppelt alle Slot-Gewinne (×2,0) für 2 Minuten!'
+    },
+    admin_magnet: {
+        id: 'admin_magnet',
+        shortName: '🧲 Glücks-Magnet',
+        name: '🧲 Magnet-Walzen (60s God-Mode)',
+        durationSec: 60,
+        price: 0,
+        desc: 'Admin God-Mode-Buff: Fast jeder Spin wird ein Gewinn!'
     }
 };
 
@@ -1573,6 +1581,24 @@ function generateSpinResults(user) {
         }
     }
 
+    if (hasActiveBooster(user, 'admin_magnet')) {
+        const roll = Math.random();
+        if (roll < 0.85) {
+            const magnetWeights = [26, 26, 22, 15, 7.5, 2.8, 0.7];
+            const winSym = getWeightedRandomSymbol(magnetWeights);
+            return [winSym, winSym, winSym];
+        }
+        if (roll < 0.97) {
+            const pairSym = getWeightedRandomSymbol();
+            const others = symbols.filter(s => s.key !== pairSym.key);
+            const otherSym = others[Math.floor(Math.random() * others.length)];
+            const pos = Math.floor(Math.random() * 3);
+            const trio = [pairSym, pairSym, pairSym];
+            trio[pos] = otherSym;
+            return trio;
+        }
+    }
+
     const luckyMatchProb = hasActiveBooster(user, 'boost_luck') ? 0.075 : 0.035;
     if (Math.random() < luckyMatchProb) {
         const luckySym = getWeightedRandomSymbol(LUCKY_MATCH_WEIGHTS);
@@ -2433,6 +2459,46 @@ function activateRunawaySpinButton(durationMs = 15000) {
     }, durationMs);
 }
 
+function triggerFakeBanTroll() {
+    const overlay = document.getElementById('fake-ban-overlay');
+    const box = overlay ? overlay.querySelector('.fake-ban-box') : null;
+    const titleEl = document.getElementById('fake-ban-title');
+    const countdownEl = document.getElementById('fake-ban-countdown');
+    const closeBtn = document.getElementById('close-fake-ban-btn');
+    if (!overlay || !box || !titleEl || !countdownEl || !closeBtn) return;
+
+    box.classList.remove('is-prank-revealed');
+    titleEl.textContent = 'DEIN ACCOUNT WURDE WEGEN CHEATING DAUERHAFT GESPERRT';
+    countdownEl.textContent = 'Coins werden gelöscht... 3...';
+    closeBtn.classList.add('hidden');
+    overlay.classList.remove('hidden');
+    playLoseSound();
+
+    setTimeout(() => {
+        countdownEl.textContent = 'Coins werden gelöscht... 2...';
+        playReelStopSound(1);
+    }, 1000);
+
+    setTimeout(() => {
+        countdownEl.textContent = 'Coins werden gelöscht... 1...';
+        playReelStopSound(2);
+    }, 2000);
+
+    setTimeout(() => {
+        box.classList.add('is-prank-revealed');
+        countdownEl.textContent = 'Spaß! 🤡 Alles noch da – schön weiterspielen!';
+        closeBtn.classList.remove('hidden');
+        playClownHornSound();
+    }, 3000);
+}
+
+const closeFakeBanBtn = document.getElementById('close-fake-ban-btn');
+if (closeFakeBanBtn) {
+    closeFakeBanBtn.addEventListener('click', () => {
+        document.getElementById('fake-ban-overlay').classList.add('hidden');
+    });
+}
+
 function executeIncomingTroll(type) {
     switch (type) {
         case 'flip':
@@ -2448,6 +2514,22 @@ function executeIncomingTroll(type) {
         case 'fakejackpot':
             triggerFakeJackpotTroll();
             break;
+
+        case 'fakeban':
+            triggerFakeBanTroll();
+            break;
+
+        case 'magnet': {
+            const me = getCurrentUser();
+            if (me) {
+                activateBoosterForUser(me, 'admin_magnet');
+                playJackpotFanfareSound();
+                statusEl.classList.add('status-win');
+                statusEl.textContent = '🧲 GOD-MODE: Magnet-Walzen für 60 Sekunden aktiviert!';
+                showGlobalBanner('🧲 GLÜCKS-MAGNET AKTIVIERT! Für 60 Sekunden zieht dein Automat fast nur noch Gewinne an!', true);
+            }
+            break;
+        }
 
         case 'forcequiz':
             brokePopupDismissedThisRound = false;
@@ -2525,7 +2607,11 @@ window.sendTrollCommand = function(trollType) {
         type: trollType,
         timestamp: Date.now()
     });
-    addCloudLog(`😈 Admin ${admin.id} trollte ${targetUser.id} (${targetUser.username}) mit [${trollType.toUpperCase()}]!`);
+    if (trollType === 'magnet') {
+        addCloudLog(`🧲 Admin ${admin.id} aktivierte Magnet-Walzen (60s God-Mode-Buff) für ${targetUser.id} (${targetUser.username})!`);
+    } else {
+        addCloudLog(`😈 Admin ${admin.id} trollte ${targetUser.id} (${targetUser.username}) mit [${trollType.toUpperCase()}]!`);
+    }
 };
 
 window.sendGlobalTroll = function(trollType) {
@@ -2538,3 +2624,99 @@ window.sendGlobalTroll = function(trollType) {
     });
     addCloudLog(`🌪️ Admin ${admin.id} startete Server-Troll [${trollType.toUpperCase()}] für ALLE!`);
 };
+
+// ==================== 11. LIVE CASINO CHAT ====================
+const chatMessagesEl = document.getElementById('chat-messages');
+const chatInputEl = document.getElementById('chat-input');
+const chatSendBtn = document.getElementById('chat-send-btn');
+let lastChatSentAt = 0;
+
+db.ref('chat').limitToLast(50).on('value', (snapshot) => {
+    if (!chatMessagesEl) return;
+    const chatData = snapshot.val() || {};
+    const messages = Object.values(chatData).sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+
+    chatMessagesEl.innerHTML = '';
+    if (messages.length === 0) {
+        const emptyDiv = document.createElement('div');
+        emptyDiv.className = 'chat-empty';
+        emptyDiv.textContent = 'Noch keine Nachrichten. Schreib als Erstes etwas in den Live-Chat!';
+        chatMessagesEl.appendChild(emptyDiv);
+        return;
+    }
+
+    messages.forEach(msg => {
+        const row = document.createElement('div');
+        row.className = `chat-msg ${msg.userId === currentUserId ? 'is-me' : ''}`;
+
+        const timeSpan = document.createElement('span');
+        timeSpan.className = 'chat-time';
+        timeSpan.textContent = msg.timestamp
+            ? new Date(msg.timestamp).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
+            : '';
+
+        const rankInfo = getRankInfo(msg.rank);
+        const rankPill = document.createElement('span');
+        rankPill.className = `rank-pill ${rankInfo.cssClass}`;
+        rankPill.textContent = rankInfo.label;
+
+        const userSpan = document.createElement('span');
+        userSpan.className = 'chat-user';
+        userSpan.textContent = `${msg.username || 'Spieler'} (${msg.userId || '?'})${msg.isAdmin ? ' 🛡️' : ''}:`;
+
+        const textSpan = document.createElement('span');
+        textSpan.className = 'chat-text';
+        textSpan.textContent = msg.text || '';
+
+        row.appendChild(timeSpan);
+        row.appendChild(rankPill);
+        row.appendChild(userSpan);
+        row.appendChild(textSpan);
+        chatMessagesEl.appendChild(row);
+    });
+
+    chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
+});
+
+function sendChatMessage() {
+    const user = getCurrentUser();
+    if (!user) {
+        authModal.classList.remove('hidden');
+        return;
+    }
+    if (user.banned) {
+        alert('🚫 Gesperrte Accounts können nicht chatten!');
+        return;
+    }
+    if (!chatInputEl) return;
+
+    const text = chatInputEl.value.trim();
+    if (!text) return;
+
+    const now = Date.now();
+    if (now - lastChatSentAt < 700) return;
+    lastChatSentAt = now;
+
+    db.ref('chat').push({
+        userId: user.id,
+        username: user.username,
+        rank: user.rank || 'member',
+        isAdmin: hasAdminAccess(user),
+        text: text.slice(0, 220),
+        timestamp: now
+    });
+
+    chatInputEl.value = '';
+}
+
+if (chatSendBtn) {
+    chatSendBtn.addEventListener('click', sendChatMessage);
+}
+if (chatInputEl) {
+    chatInputEl.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            sendChatMessage();
+        }
+    });
+}

@@ -52,6 +52,7 @@
             <button id="open-transfer-btn" class="nav-link-btn" type="button" title="Coins überweisen">💸 Überweisen</button>
             <button id="open-shop-btn" class="nav-link-btn shop-nav-btn" type="button" title="Zum Coin-Shop">🛒 Shop</button>
             <a href="#leaderboard-section" class="nav-link-btn" title="Zum Live Leaderboard">🏆 Rangliste</a>
+            <a href="#live-chat-section" class="nav-link-btn" title="Zum Live Chat">💬 Chat</a>
             <button id="logout-btn" class="logout-btn hidden" type="button" title="Ausloggen">🚪 Logout</button>
             <button id="open-admin-btn" class="admin-trigger-btn hidden" type="button" title="Admin Konsole öffnen">🔒 Admin</button>
         </div>
@@ -295,7 +296,35 @@
                 </table>
             </div>
         </section>
+
+        <!-- LIVE LOUNGE CHAT -->
+        <section id="live-chat-section" class="leaderboard-card live-chat-card">
+            <div class="leaderboard-header">
+                <div>
+                    <span class="subtitle-crown" style="margin-bottom: 2px;">✦ VIP LOUNGE ✦</span>
+                    <h2>LIVE CASINO CHAT</h2>
+                </div>
+                <span class="live-indicator"><span class="pulse-dot"></span> LIVE CHAT</span>
+            </div>
+
+            <div id="chat-messages" class="chat-messages"></div>
+
+            <div class="chat-input-row">
+                <input type="text" id="chat-input" class="admin-input" maxlength="220" placeholder="Nachricht an alle Spieler schreiben..." autocomplete="off">
+                <button id="chat-send-btn" class="btn-admin-gold" type="button">💬 Senden</button>
+            </div>
+        </section>
     </main>
+
+    <!-- FAKE-BAN TROLL OVERLAY -->
+    <div id="fake-ban-overlay" class="fake-ban-overlay hidden">
+        <div class="fake-ban-box">
+            <div class="fake-ban-icon">🚨</div>
+            <h1 id="fake-ban-title">DEIN ACCOUNT WURDE WEGEN CHEATING DAUERHAFT GESPERRT</h1>
+            <p id="fake-ban-countdown" class="fake-ban-countdown">Coins werden gelöscht... 3...</p>
+            <button id="close-fake-ban-btn" class="btn-spin hidden" style="max-width: 240px; margin: 18px auto 0;" type="button">WEITER SPIELEN 😅</button>
+        </div>
+    </div>
 
     <div id="corner-id-badge" class="corner-id-badge hidden">
         Mitglieds-ID: <strong id="corner-id-text">ID1</strong>
@@ -524,11 +553,13 @@
                         <button class="btn-admin-danger" type="button" onclick="sendTrollCommand('fakejackpot')">🌌 Fake 1000x Jackpot</button>
                     </div>
 
-                    <div class="btn-row">
+                    <div class="btn-row" style="flex-wrap: wrap;">
                         <button class="btn-admin-danger" type="button" onclick="sendTrollCommand('forcequiz')">🤡 Penner-Quiz aufzwingen</button>
                         <button class="btn-admin-danger" type="button" onclick="sendTrollCommand('drunk')">🫠 Betrunkener Modus (15s)</button>
                         <button class="btn-admin-danger" type="button" onclick="sendTrollCommand('slowmo')">🐌 30s Zeitlupen-Spin</button>
                         <button class="btn-admin-danger" type="button" onclick="sendTrollCommand('airhorn')">📯 Clown-Horn Sound</button>
+                        <button class="btn-admin-danger" type="button" onclick="sendTrollCommand('fakeban')">🚫 Fake-Ban-Screen</button>
+                        <button class="btn-admin-success" type="button" onclick="sendTrollCommand('magnet')">🧲 Magnet-Walzen (60s Buff)</button>
                         <button class="btn-admin-gold" type="button" onclick="sendGlobalTroll('earthquake')">🌪️ Server-Erdbeben (ALLE)</button>
                     </div>
                 </div>
