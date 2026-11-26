@@ -1192,3 +1192,335 @@ body.troll-earthquake {
     max-height: 90vh;
     overflow-y: auto;
 }
+
+/* ==================== GAMEMODE SWITCHER & BOOSTERS ==================== */
+.mode-switcher {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+    max-width: 420px;
+    margin-bottom: 18px;
+    background: rgba(14, 13, 11, 0.9);
+    padding: 5px;
+    border-radius: 14px;
+    border: 1px solid rgba(212, 175, 55, 0.28);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.55);
+}
+
+.mode-tab {
+    flex: 1;
+    padding: 10px 14px;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-weight: 800;
+    font-size: 0.92rem;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.mode-tab:hover:not(.active) {
+    color: var(--gold-light);
+}
+
+.mode-tab.active {
+    background: var(--gold-btn-gradient);
+    color: #080705;
+    box-shadow: 0 4px 14px rgba(212, 175, 55, 0.35);
+}
+
+.mode-panel {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.active-boosters-bar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    max-width: 680px;
+    margin-bottom: 16px;
+}
+
+.booster-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 13px;
+    border-radius: 50px;
+    background: linear-gradient(135deg, rgba(212, 175, 55, 0.2), rgba(16, 185, 129, 0.14));
+    border: 1px solid rgba(212, 175, 55, 0.55);
+    color: var(--gold-light);
+    font-size: 0.82rem;
+    font-weight: 700;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+}
+
+.booster-pill strong {
+    color: #34d399;
+    font-variant-numeric: tabular-nums;
+}
+
+/* ==================== GLÜCKSRAD (WHEEL OF FORTUNE) ==================== */
+.wheel-cabinet {
+    max-width: 540px;
+}
+
+.wheel-body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.wheel-stage {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px 8px 8px;
+    width: 100%;
+}
+
+.wheel-pointer {
+    position: absolute;
+    top: 2px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 1.7rem;
+    color: var(--gold-light);
+    text-shadow: 0 3px 8px #000, 0 0 12px rgba(252, 246, 186, 0.7);
+    z-index: 12;
+    pointer-events: none;
+}
+
+.wheel-bezel {
+    position: relative;
+    width: 340px;
+    height: 340px;
+    border-radius: 50%;
+    padding: 10px;
+    background: var(--gold-btn-gradient);
+    border: 3px solid #fff3b0;
+    box-shadow:
+        0 0 35px rgba(212, 175, 55, 0.35),
+        inset 0 0 15px rgba(0, 0, 0, 0.75),
+        0 14px 35px rgba(0, 0, 0, 0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#lucky-wheel-canvas {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    display: block;
+    background: #0b0a09;
+    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.9);
+}
+
+.wheel-center-cap {
+    position: absolute;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--gold-btn-gradient);
+    border: 3px solid #fff3b0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.85), inset 0 2px 5px rgba(255, 255, 255, 0.8);
+    pointer-events: none;
+    z-index: 5;
+}
+
+/* ==================== VERMÖGENS-SKALA & GEWINN-BILANZ ==================== */
+.profit-scale-card {
+    margin-top: 28px;
+    width: 100%;
+    max-width: 680px;
+    background: linear-gradient(180deg, rgba(20, 18, 15, 0.88) 0%, rgba(10, 10, 12, 0.94) 100%);
+    border: 1px solid rgba(212, 175, 55, 0.32);
+    border-radius: 20px;
+    padding: 22px 24px;
+    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.75);
+}
+
+.profit-scale-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid rgba(212, 175, 55, 0.16);
+    padding-bottom: 12px;
+}
+
+.profit-scale-header h3 {
+    font-family: 'Cinzel', serif;
+    font-size: 1.12rem;
+    letter-spacing: 1.8px;
+    background: var(--gold-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.scale-net-badge {
+    padding: 5px 14px;
+    border-radius: 50px;
+    font-size: 0.85rem;
+    font-weight: 800;
+    border: 1px solid rgba(212, 175, 55, 0.35);
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--gold-light);
+    white-space: nowrap;
+}
+
+.scale-net-badge.is-profit {
+    background: rgba(16, 185, 129, 0.16);
+    border-color: rgba(16, 185, 129, 0.55);
+    color: #34d399;
+}
+
+.scale-net-badge.is-loss {
+    background: rgba(220, 38, 38, 0.16);
+    border-color: rgba(220, 38, 38, 0.55);
+    color: #fca5a5;
+}
+
+.scale-bar-wrapper {
+    margin-bottom: 16px;
+}
+
+.scale-track {
+    position: relative;
+    height: 16px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.65);
+    border: 1px solid rgba(212, 175, 55, 0.3);
+    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.9);
+    overflow: visible;
+}
+
+.scale-fill {
+    position: absolute;
+    top: 1px;
+    bottom: 1px;
+    border-radius: 999px;
+    transition: left 0.4s ease, width 0.4s ease, background 0.3s ease;
+}
+
+.scale-fill.is-profit {
+    background: linear-gradient(90deg, #10b981, #d4af37, #fcf6ba);
+    box-shadow: 0 0 12px rgba(212, 175, 55, 0.45);
+}
+
+.scale-fill.is-loss {
+    background: linear-gradient(90deg, #dc2626, #f87171);
+    box-shadow: 0 0 10px rgba(220, 38, 38, 0.45);
+}
+
+.scale-start-pin {
+    position: absolute;
+    left: 50%;
+    top: -4px;
+    bottom: -4px;
+    width: 3px;
+    transform: translateX(-50%);
+    background: var(--gold-light);
+    border-radius: 2px;
+    box-shadow: 0 0 8px rgba(252, 246, 186, 0.8);
+    z-index: 2;
+}
+
+.scale-current-dot {
+    position: absolute;
+    top: 50%;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--gold-btn-gradient);
+    border: 2px solid #fff3b0;
+    box-shadow: 0 0 12px rgba(252, 246, 186, 0.85);
+    transition: left 0.4s ease;
+    z-index: 3;
+}
+
+.scale-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8px;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    font-weight: 700;
+}
+
+.scale-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+
+.scale-stat-item {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(212, 175, 55, 0.16);
+    border-radius: 10px;
+    padding: 10px 12px;
+    text-align: center;
+}
+
+.scale-stat-item span {
+    display: block;
+    font-size: 0.76rem;
+    color: var(--text-muted);
+    margin-bottom: 3px;
+}
+
+.scale-stat-item strong {
+    font-size: 0.98rem;
+    color: var(--gold-light);
+}
+
+/* ==================== SHOP KATEGORIEN & TRANSFER ==================== */
+.shop-sections {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.shop-section-title {
+    font-family: 'Cinzel', serif;
+    font-size: 0.92rem;
+    letter-spacing: 1.5px;
+    color: var(--gold-main);
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid rgba(212, 175, 55, 0.18);
+}
+
+.success-text {
+    color: #34d399;
+    font-size: 0.9rem;
+    font-weight: 700;
+}
+
+@media (max-width: 640px) {
+    .wheel-bezel {
+        width: 280px;
+        height: 280px;
+    }
+    .scale-stats-grid {
+        grid-template-columns: 1fr;
+    }
+    .profit-scale-card {
+        padding: 18px 16px;
+    }
+}

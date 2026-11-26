@@ -220,6 +220,23 @@ function playBroadcastSound() {
     });
 }
 
+function playWheelTickSound() {
+    withReadyAudio((ctx) => {
+        const now = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(860, now);
+        osc.frequency.exponentialRampToValueAtTime(280, now + 0.03);
+        gain.gain.setValueAtTime(0.075, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.035);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.04);
+    });
+}
+
 // ==================== 2. PASSWORT-HASHING (SHA-256) ====================
 async function sha256(text) {
     const encoder = new TextEncoder();
@@ -231,11 +248,13 @@ async function sha256(text) {
 
 // ==================== 3. SPIEL-KONFIGURATION, RECHTE & SHOP ====================
 const SUPER_ADMIN_ID = 'ID1';
+const START_COINS_DEFAULT = 2500;
 const AUTO_SPIN_MIN_COINS = 500;
 const PASSIVE_REWARD_COINS = 10;
 const PASSIVE_INTERVAL_SEC = 300; // 5 Minuten
 const BROKE_THRESHOLD_COINS = 10;
 const BROKE_QUIZ_REWARD = 250;
+const WHEEL_SPIN_COST = 1000;
 
 const RANKS = {
     member:  { label: '👤 Member',            bonus: 1.00, cssClass: 'rank-member' },
@@ -245,6 +264,43 @@ const RANKS = {
     diamond: { label: '💎 Diamond Elite',     bonus: 1.25, cssClass: 'rank-diamond' },
     royal:   { label: '👑 Royal High-Roller', bonus: 1.40, cssClass: 'rank-royal' },
     emperor: { label: '⚡ Aurelia Emperor',   bonus: 1.50, cssClass: 'rank-emperor' }
+};
+
+const RANK_ORDER = ['member', 'bronze', 'silver', 'gold', 'diamond', 'royal', 'emperor'];
+
+const BOOSTERS = {
+    boost_luck: {
+        id: 'boost_luck',
+        shortName: '🍀 Fortuna-Elixier',
+        name: '🍀 Fortuna-Elixier (3 Min.)',
+        durationSec: 180,
+        price: 2000,
+        desc: 'Erhöht für 3 Minuten deutlich die Chance auf 3er-Treffer.'
+    },
+    boost_cashback: {
+        id: 'boost_cashback',
+        shortName: '💸 Cashback-Schild',
+        name: '💸 Cashback-Schild (5 Min.)',
+        durationSec: 300,
+        price: 2500,
+        desc: 'Erstattet für 5 Minuten 25% deines Einsatzes bei jeder Niete.'
+    },
+    boost_mult15: {
+        id: 'boost_mult15',
+        shortName: '⚡ 1.5x Gold-Rausch',
+        name: '⚡ 1.5x Gold-Rausch (4 Min.)',
+        durationSec: 240,
+        price: 3500,
+        desc: 'Erhöht alle Slot-Gewinne für 4 Minuten um +50% (×1,5).'
+    },
+    boost_mult20: {
+        id: 'boost_mult20',
+        shortName: '👑 2x Overdrive',
+        name: '👑 2x Imperial Overdrive (2 Min.)',
+        durationSec: 120,
+        price: 6000,
+        desc: 'Verdoppelt alle Slot-Gewinne (×2,0) für 2 Minuten!'
+    }
 };
 
 const SHOP_ITEMS = [
@@ -261,6 +317,70 @@ const SHOP_ITEMS = [
         name: '⚡ Turbo-Walzen',
         price: 3000,
         desc: 'Doppelt so schnelle Drehungen für maximale Action.'
+    },
+    {
+        id: 'boost_luck',
+        type: 'booster',
+        boosterId: 'boost_luck',
+        name: BOOSTERS.boost_luck.name,
+        price: BOOSTERS.boost_luck.price,
+        desc: BOOSTERS.boost_luck.desc
+    },
+    {
+        id: 'boost_cashback',
+        type: 'booster',
+        boosterId: 'boost_cashback',
+        name: BOOSTERS.boost_cashback.name,
+        price: BOOSTERS.boost_cashback.price,
+        desc: BOOSTERS.boost_cashback.desc
+    },
+    {
+        id: 'boost_mult15',
+        type: 'booster',
+        boosterId: 'boost_mult15',
+        name: BOOSTERS.boost_mult15.name,
+        price: BOOSTERS.boost_mult15.price,
+        desc: BOOSTERS.boost_mult15.desc
+    },
+    {
+        id: 'boost_mult20',
+        type: 'booster',
+        boosterId: 'boost_mult20',
+        name: BOOSTERS.boost_mult20.name,
+        price: BOOSTERS.boost_mult20.price,
+        desc: BOOSTERS.boost_mult20.desc
+    },
+    {
+        id: 'rank_bronze',
+        type: 'rank',
+        rankKey: 'bronze',
+        name: '🥉 Rang: Bronze Club (+5%)',
+        price: 25000,
+        desc: 'Dauerhafter +5% Gewinn-Bonus auf alle Treffer.'
+    },
+    {
+        id: 'rank_silver',
+        type: 'rank',
+        rankKey: 'silver',
+        name: '🥈 Rang: Silver Lounge (+10%)',
+        price: 75000,
+        desc: 'Dauerhafter +10% Gewinn-Bonus auf alle Treffer.'
+    },
+    {
+        id: 'rank_gold',
+        type: 'rank',
+        rankKey: 'gold',
+        name: '🥇 Rang: Gold Reserve (+15%)',
+        price: 200000,
+        desc: 'Dauerhafter +15% Gewinn-Bonus auf alle Treffer.'
+    },
+    {
+        id: 'rank_diamond',
+        type: 'rank',
+        rankKey: 'diamond',
+        name: '💎 Rang: Diamond Elite (+25%)',
+        price: 500000,
+        desc: 'Dauerhafter +25% Gewinn-Bonus auf alle Treffer. (Royal & Emperor nur per Admin!)'
     },
     {
         id: 'title_gambler',
@@ -298,12 +418,31 @@ const SHOP_ITEMS = [
 
 const symbols = [
     { key: 'cherry',  icon: '🍒', multiplier: 2,    weight: 34 },
-    { key: 'lemon',   icon: '🍋', multiplier: 3,    weight: 28 },
+    { key: 'lemon',   icon: '🍋', multiplier: 3,    weight: 27 },
     { key: 'bell',    icon: '🔔', multiplier: 5,    weight: 18 },
-    { key: 'diamond', icon: '💎', multiplier: 15,   weight: 11 },
-    { key: 'seven',   icon: '7️⃣', multiplier: 50,   weight: 5.5 },
+    { key: 'diamond', icon: '💎', multiplier: 15,   weight: 11.5 },
+    { key: 'seven',   icon: '7️⃣', multiplier: 50,   weight: 5.8 },
     { key: 'crown',   icon: '👑', multiplier: 250,  weight: 2.5 },
-    { key: 'cosmic',  icon: '🌌', multiplier: 1000, weight: 1.0 }
+    { key: 'cosmic',  icon: '🌌', multiplier: 1000, weight: 1.2 }
+];
+
+const LUCKY_MATCH_WEIGHTS = [45, 30, 16, 6.5, 2.0, 0.4, 0.1];
+
+const WHEEL_SEGMENTS = [
+    { id: 'w_lose',      label: '💀 Niete',          short: '💀 0',      type: 'coins',   value: 0,              prob: 28.00, color: '#171411', textColor: '#9c9588' },
+    { id: 'w_400',       label: '🪙 400 🪙',         short: '400 🪙',    type: 'coins',   value: 400,            prob: 26.00, color: '#5c0303', textColor: '#fcf6ba' },
+    { id: 'w_800',       label: '🪙 800 🪙',         short: '800 🪙',    type: 'coins',   value: 800,            prob: 20.00, color: '#0b1956', textColor: '#fcf6ba' },
+    { id: 'w_1500',      label: '💰 1.500 🪙',       short: '1.5K 🪙',   type: 'coins',   value: 1500,           prob: 13.00, color: '#3b0202', textColor: '#fcf6ba' },
+    { id: 'w_3000',      label: '💰 3.000 🪙',       short: '3K 🪙',     type: 'coins',   value: 3000,           prob: 6.00,  color: '#152b8c', textColor: '#fcf6ba' },
+    { id: 'w_10000',     label: '💎 10.000 🪙',      short: '10K 🪙',    type: 'coins',   value: 10000,          prob: 1.20,  color: '#78551a', textColor: '#fcf6ba' },
+    { id: 'w_luck',      label: '🍀 Fortuna (3m)',   short: '🍀 3m',     type: 'booster', value: 'boost_luck',   prob: 2.20,  color: '#064e3b', textColor: '#6ee7b7' },
+    { id: 'w_cashback',  label: '💸 Cashback (5m)',  short: '💸 5m',     type: 'booster', value: 'boost_cashback', prob: 1.60, color: '#1e3a8a', textColor: '#93c5fd' },
+    { id: 'w_mult15',    label: '⚡ 1.5x Boost (4m)',short: '⚡ 1.5x',   type: 'booster', value: 'boost_mult15', prob: 1.10,  color: '#713f12', textColor: '#fde047' },
+    { id: 'w_mult20',    label: '👑 2x Boost (2m)',  short: '👑 2x',     type: 'booster', value: 'boost_mult20', prob: 0.50,  color: '#881337', textColor: '#fda4af' },
+    { id: 'w_bronze',    label: '🥉 Bronze Club',    short: '🥉 Bronze',  type: 'rank',    value: 'bronze',       dupCoins: 5000,  prob: 0.25, color: '#432818', textColor: '#ffedd8' },
+    { id: 'w_silver',    label: '🥈 Silver Lounge',  short: '🥈 Silver',  type: 'rank',    value: 'silver',       dupCoins: 10000, prob: 0.10, color: '#334155', textColor: '#f8fafc' },
+    { id: 'w_gold',      label: '🥇 Gold Reserve',   short: '🥇 Gold',    type: 'rank',    value: 'gold',         dupCoins: 25000, prob: 0.04, color: '#b38728', textColor: '#080705' },
+    { id: 'w_diamond',   label: '💎 Diamond Elite',  short: '💎 Diamond', type: 'rank',    value: 'diamond',      dupCoins: 50000, prob: 0.01, color: '#0284c7', textColor: '#e0f2fe' }
 ];
 
 // ==================== 3B. ALLGEMEINWISSEN QUIZ-POOL (24 FRAGEN) ====================
@@ -342,11 +481,14 @@ let lastBroadcastTimestamp = 0;
 
 let currentBet = 50;
 let isSpinning = false;
+let isWheelSpinning = false;
 let isAutoSpinning = false;
 let passiveSecondsLeft = PASSIVE_INTERVAL_SEC;
 let brokePopupDismissedThisRound = false;
 let isSlowMoNextSpin = false;
 let runawayActive = false;
+let activeGameMode = 'slots';
+let wheelRotationRad = 0;
 
 db.ref('users').on('value', (snapshot) => {
     usersMap = snapshot.val() || {};
@@ -410,6 +552,63 @@ function getRankInfo(rankKey) {
     return RANKS[rankKey] || RANKS.member;
 }
 
+function getRankIndex(rankKey) {
+    const idx = RANK_ORDER.indexOf(rankKey);
+    return idx === -1 ? 0 : idx;
+}
+
+function hasActiveBooster(user, boosterId) {
+    if (!user || !user.activeBoosters) return false;
+    const expiresAt = user.activeBoosters[boosterId];
+    return typeof expiresAt === 'number' && expiresAt > Date.now();
+}
+
+function getActiveBoosters(user) {
+    if (!user || !user.activeBoosters) return [];
+    const now = Date.now();
+    return Object.entries(user.activeBoosters)
+        .filter(([id, expiresAt]) => BOOSTERS[id] && typeof expiresAt === 'number' && expiresAt > now)
+        .map(([id, expiresAt]) => ({
+            id,
+            config: BOOSTERS[id],
+            expiresAt,
+            remainingSec: Math.ceil((expiresAt - now) / 1000)
+        }));
+}
+
+function formatDurationMMSS(totalSeconds) {
+    const secs = Math.max(0, Math.floor(totalSeconds));
+    const m = String(Math.floor(secs / 60)).padStart(2, '0');
+    const s = String(secs % 60).padStart(2, '0');
+    return `${m}:${s}`;
+}
+
+function activateBoosterForUser(user, boosterId) {
+    const booster = BOOSTERS[boosterId];
+    if (!user || !booster) return;
+    const now = Date.now();
+    const existing = (user.activeBoosters && user.activeBoosters[boosterId]) || 0;
+    const baseTime = existing > now ? existing : now;
+    const nextExpiry = baseTime + booster.durationSec * 1000;
+    db.ref(`users/${user.id}/activeBoosters/${boosterId}`).set(nextExpiry);
+}
+
+function renderActiveBoostersBar(user) {
+    const bar = document.getElementById('active-boosters-bar');
+    if (!bar) return;
+    const active = getActiveBoosters(user);
+    if (!user || active.length === 0) {
+        bar.classList.add('hidden');
+        bar.innerHTML = '';
+        return;
+    }
+
+    bar.classList.remove('hidden');
+    bar.innerHTML = active
+        .map(b => `<span class="booster-pill">${b.config.shortName} <strong>${formatDurationMMSS(b.remainingSec)}</strong></span>`)
+        .join('');
+}
+
 function addCloudLog(message) {
     const time = new Date().toLocaleTimeString('de-DE');
     db.ref('logs').push(`[${time}] ${message}`);
@@ -423,12 +622,13 @@ function pushGlobalBroadcast(text, isWinner = false) {
     });
 }
 
-// ==================== 4B. 5-MINUTEN GRATIS-COINS TIMER ====================
+// ==================== 4B. 5-MINUTEN GRATIS-COINS & BOOSTER TIMER ====================
 setInterval(() => {
     const user = getCurrentUser();
     const timerTextEl = document.getElementById('passive-timer-text');
     if (!user || user.banned) {
         if (timerTextEl) timerTextEl.textContent = '05:00';
+        renderActiveBoostersBar(null);
         return;
     }
 
@@ -444,6 +644,12 @@ setInterval(() => {
         const mins = String(Math.floor(passiveSecondsLeft / 60)).padStart(2, '0');
         const secs = String(passiveSecondsLeft % 60).padStart(2, '0');
         timerTextEl.textContent = `${mins}:${secs}`;
+    }
+
+    renderActiveBoostersBar(user);
+    const shopModalEl = document.getElementById('shop-modal');
+    if (shopModalEl && !shopModalEl.classList.contains('hidden')) {
+        updateShopBoosterTimers(user);
     }
 }, 1000);
 
@@ -678,7 +884,10 @@ async function handleAuthSubmit() {
                 id: newId,
                 username: username,
                 password: hashedPassword,
-                coins: 2500,
+                coins: START_COINS_DEFAULT,
+                startCoins: START_COINS_DEFAULT,
+                totalWon: 0,
+                totalWagered: 0,
                 rank: 'member',
                 banned: false,
                 isAdmin: newId === SUPER_ADMIN_ID,
@@ -810,6 +1019,12 @@ function updateUI() {
         const shopBal = document.getElementById('shop-balance-display');
         if (shopBal) shopBal.textContent = user.coins.toLocaleString('de-DE');
 
+        const transferBal = document.getElementById('transfer-balance-display');
+        if (transferBal) transferBal.textContent = user.coins.toLocaleString('de-DE');
+
+        renderProfitScale(user);
+        renderActiveBoostersBar(user);
+        renderTransferTargets(user);
         checkAndShowBrokePopup(false);
     } else {
         profileBadge.classList.add('hidden');
@@ -818,11 +1033,82 @@ function updateUI() {
         if (adminBtn) adminBtn.classList.add('hidden');
         if (dashboardModal) dashboardModal.classList.add('hidden');
         if (brokeQuizModal) brokeQuizModal.classList.add('hidden');
+        const transferModalEl = document.getElementById('transfer-modal');
+        if (transferModalEl) transferModalEl.classList.add('hidden');
+        renderProfitScale(null);
+        renderActiveBoostersBar(null);
         balanceEl.textContent = '0';
         authModal.classList.remove('hidden');
     }
 
     updateAutoSpinButtonUI(user);
+}
+
+// ==================== 6A. VERMÖGENS-SKALA & GEWINN-BILANZ ====================
+function renderProfitScale(user) {
+    const card = document.getElementById('profit-scale-card');
+    if (!card) return;
+
+    if (!user) {
+        card.classList.add('hidden');
+        return;
+    }
+
+    card.classList.remove('hidden');
+    const startCoins = typeof user.startCoins === 'number' ? user.startCoins : START_COINS_DEFAULT;
+    const currentCoins = user.coins || 0;
+    const totalWon = user.totalWon || 0;
+    const netDiff = currentCoins - startCoins;
+
+    const startValEl = document.getElementById('scale-start-value');
+    const currentValEl = document.getElementById('scale-current-value');
+    const totalWonEl = document.getElementById('scale-total-won');
+    const netBadgeEl = document.getElementById('scale-net-badge');
+    const startLabelEl = document.getElementById('scale-start-label');
+    const maxLabelEl = document.getElementById('scale-max-label');
+    const fillEl = document.getElementById('scale-fill');
+    const dotEl = document.getElementById('scale-current-dot');
+
+    startValEl.textContent = `${startCoins.toLocaleString('de-DE')} 🪙`;
+    currentValEl.textContent = `${currentCoins.toLocaleString('de-DE')} 🪙`;
+    totalWonEl.textContent = `${totalWon.toLocaleString('de-DE')} 🪙`;
+    startLabelEl.textContent = `Start: ${startCoins.toLocaleString('de-DE')} 🪙`;
+
+    netBadgeEl.classList.remove('is-profit', 'is-loss');
+    if (netDiff > 0) {
+        netBadgeEl.textContent = `+${netDiff.toLocaleString('de-DE')} 🪙 Gewinn`;
+        netBadgeEl.classList.add('is-profit');
+    } else if (netDiff < 0) {
+        netBadgeEl.textContent = `${netDiff.toLocaleString('de-DE')} 🪙 Verlust`;
+        netBadgeEl.classList.add('is-loss');
+    } else {
+        netBadgeEl.textContent = '±0 🪙 Ausgeglichen';
+    }
+
+    const maxRight = Math.max(startCoins * 2, Math.ceil(currentCoins * 1.15));
+    maxLabelEl.textContent = `${maxRight.toLocaleString('de-DE')} 🪙`;
+
+    let posPercent = 50;
+    if (currentCoins <= 0) {
+        posPercent = 0;
+    } else if (currentCoins < startCoins) {
+        posPercent = (currentCoins / startCoins) * 50;
+    } else if (currentCoins > startCoins) {
+        posPercent = 50 + ((currentCoins - startCoins) / Math.max(1, maxRight - startCoins)) * 50;
+    }
+    posPercent = Math.max(0, Math.min(100, posPercent));
+
+    fillEl.classList.remove('is-profit', 'is-loss');
+    if (posPercent >= 50) {
+        fillEl.classList.add('is-profit');
+        fillEl.style.left = '50%';
+        fillEl.style.width = `${posPercent - 50}%`;
+    } else {
+        fillEl.classList.add('is-loss');
+        fillEl.style.left = `${posPercent}%`;
+        fillEl.style.width = `${50 - posPercent}%`;
+    }
+    dotEl.style.left = `${posPercent}%`;
 }
 
 // ==================== 6B. COIN SHOP LOGIK ====================
@@ -840,6 +1126,70 @@ document.getElementById('close-shop-btn').addEventListener('click', () => {
     shopModal.classList.add('hidden');
 });
 
+function createShopCard(item, user) {
+    const owned = userOwnsItem(user, item.id);
+    const isEquipped = item.type === 'title' && user.equippedTitle === item.badge;
+    const canAfford = user.coins >= item.price;
+
+    let btnHtml = '';
+    let statusNote = '';
+
+    if (item.type === 'booster') {
+        const boosterActive = hasActiveBooster(user, item.boosterId);
+        const expiresAt = (user.activeBoosters && user.activeBoosters[item.boosterId]) || 0;
+        const remSec = boosterActive ? Math.ceil((expiresAt - Date.now()) / 1000) : 0;
+        statusNote = `<div data-booster-timer="${item.boosterId}" style="font-size:0.78rem; color:#34d399; font-weight:700; margin-top:6px; ${boosterActive ? '' : 'display:none;'}">⏱️ Aktiv: noch ${formatDurationMMSS(remSec)}</div>`;
+        btnHtml = `<button class="mini-btn" data-booster-btn="${item.boosterId}" style="width:100%; margin-top:10px; padding:8px; background:${canAfford ? 'var(--gold-btn-gradient)' : 'rgba(255,255,255,0.08)'}; color:${canAfford ? '#080705' : '#888'}; font-weight:800;" onclick="buyShopItem('${item.id}')">${boosterActive ? 'Verlängern' : 'Aktivieren'} (${item.price.toLocaleString('de-DE')} 🪙)</button>`;
+    } else if (item.type === 'rank') {
+        const currentIdx = getRankIndex(user.rank);
+        const targetIdx = getRankIndex(item.rankKey);
+        if (currentIdx >= targetIdx) {
+            btnHtml = `<button class="mini-btn" disabled style="width:100%; margin-top:10px; padding:8px; background:rgba(16,185,129,0.18); color:#34d399; border-color:var(--green-lux);">✅ ${currentIdx === targetIdx ? 'Aktueller Rang' : 'Höherer Rang aktiv'}</button>`;
+        } else {
+            btnHtml = `<button class="mini-btn" style="width:100%; margin-top:10px; padding:8px; background:${canAfford ? 'var(--gold-btn-gradient)' : 'rgba(255,255,255,0.08)'}; color:${canAfford ? '#080705' : '#888'}; font-weight:800;" onclick="buyShopItem('${item.id}')">Kaufen (${item.price.toLocaleString('de-DE')} 🪙)</button>`;
+        }
+    } else if (!owned) {
+        btnHtml = `<button class="mini-btn" style="width:100%; margin-top:10px; padding:8px; background:${canAfford ? 'var(--gold-btn-gradient)' : 'rgba(255,255,255,0.08)'}; color:${canAfford ? '#080705' : '#888'}; font-weight:800;" onclick="buyShopItem('${item.id}')">Kaufen (${item.price.toLocaleString('de-DE')} 🪙)</button>`;
+    } else if (item.type === 'title') {
+        btnHtml = `<button class="mini-btn" style="width:100%; margin-top:10px; padding:8px; background:${isEquipped ? 'rgba(212,175,55,0.28)' : 'rgba(212,175,55,0.12)'}; color:var(--gold-light); border-color:var(--gold-main);" onclick="equipShopItem('${item.id}')">${isEquipped ? '✅ Aktiv (Ablegen)' : '✨ Titel anlegen'}</button>`;
+    } else {
+        btnHtml = `<button class="mini-btn" disabled style="width:100%; margin-top:10px; padding:8px; background:rgba(16,185,129,0.18); color:#34d399; border-color:var(--green-lux);">✅ Freigeschaltet</button>`;
+    }
+
+    const card = document.createElement('div');
+    card.style.cssText = 'background: rgba(0, 0, 0, 0.45); border: 1px solid rgba(212, 175, 55, 0.25); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between;';
+    card.innerHTML = `
+        <div>
+            <div style="font-weight: 800; font-size: 0.96rem; color: var(--gold-light); margin-bottom: 4px;">${item.name}</div>
+            <div style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.35;">${item.desc}</div>
+            ${statusNote}
+        </div>
+        ${btnHtml}
+    `;
+    return card;
+}
+
+function updateShopBoosterTimers(user) {
+    if (!user) return;
+    Object.values(BOOSTERS).forEach(booster => {
+        const timerEl = document.querySelector(`[data-booster-timer="${booster.id}"]`);
+        const btnEl = document.querySelector(`[data-booster-btn="${booster.id}"]`);
+        const active = hasActiveBooster(user, booster.id);
+        if (timerEl) {
+            if (active) {
+                const remSec = Math.ceil((user.activeBoosters[booster.id] - Date.now()) / 1000);
+                timerEl.style.display = 'block';
+                timerEl.textContent = `⏱️ Aktiv: noch ${formatDurationMMSS(remSec)}`;
+            } else {
+                timerEl.style.display = 'none';
+            }
+        }
+        if (btnEl) {
+            btnEl.textContent = `${active ? 'Verlängern' : 'Aktivieren'} (${booster.price.toLocaleString('de-DE')} 🪙)`;
+        }
+    });
+}
+
 function renderShop() {
     const container = document.getElementById('shop-items-container');
     const user = getCurrentUser();
@@ -847,38 +1197,38 @@ function renderShop() {
 
     container.innerHTML = '';
 
-    SHOP_ITEMS.forEach(item => {
-        const owned = userOwnsItem(user, item.id);
-        const isEquipped = item.type === 'title' && user.equippedTitle === item.badge;
+    const sections = [
+        { title: '⚡ MODULE & KURZZEIT-BOOSTER (2–5 MIN.)', items: SHOP_ITEMS.filter(i => i.type === 'feature' || i.type === 'booster') },
+        { title: '🎖️ EXKLUSIVE RÄNGE (DAUERHAFTER GEWINN-BONUS)', items: SHOP_ITEMS.filter(i => i.type === 'rank') },
+        { title: '✨ KOSMETISCHE PRESTIGE-TITEL', items: SHOP_ITEMS.filter(i => i.type === 'title') }
+    ];
 
-        let btnHtml = '';
-        if (!owned) {
-            const canAfford = user.coins >= item.price;
-            btnHtml = `<button class="mini-btn" style="width:100%; margin-top:10px; padding:8px; background:${canAfford ? 'var(--gold-btn-gradient)' : 'rgba(255,255,255,0.08)'}; color:${canAfford ? '#080705' : '#888'}; font-weight:800;" onclick="buyShopItem('${item.id}')">Kaufen (${item.price.toLocaleString('de-DE')} 🪙)</button>`;
-        } else if (item.type === 'title') {
-            btnHtml = `<button class="mini-btn" style="width:100%; margin-top:10px; padding:8px; background:${isEquipped ? 'rgba(212,175,55,0.28)' : 'rgba(212,175,55,0.12)'}; color:var(--gold-light); border-color:var(--gold-main);" onclick="equipShopItem('${item.id}')">${isEquipped ? '✅ Aktiv (Ablegen)' : '✨ Titel anlegen'}</button>`;
-        } else {
-            btnHtml = `<button class="mini-btn" disabled style="width:100%; margin-top:10px; padding:8px; background:rgba(16,185,129,0.18); color:#34d399; border-color:var(--green-lux);">✅ Freigeschaltet</button>`;
-        }
+    sections.forEach(sec => {
+        const wrapper = document.createElement('div');
+        const heading = document.createElement('h3');
+        heading.className = 'shop-section-title';
+        heading.textContent = sec.title;
+        wrapper.appendChild(heading);
 
-        const card = document.createElement('div');
-        card.style.cssText = 'background: rgba(0, 0, 0, 0.45); border: 1px solid rgba(212, 175, 55, 0.25); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between;';
-        card.innerHTML = `
-            <div>
-                <div style="font-weight: 800; font-size: 0.96rem; color: var(--gold-light); margin-bottom: 4px;">${item.name}</div>
-                <div style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.35;">${item.desc}</div>
-            </div>
-            ${btnHtml}
-        `;
-        container.appendChild(card);
+        const grid = document.createElement('div');
+        grid.className = 'shop-grid';
+        sec.items.forEach(item => grid.appendChild(createShopCard(item, user)));
+        wrapper.appendChild(grid);
+        container.appendChild(wrapper);
     });
 }
 
 window.buyShopItem = function(itemId) {
     const user = getCurrentUser();
-    if (!user) return;
+    if (!user || user.banned) return;
     const item = SHOP_ITEMS.find(i => i.id === itemId);
-    if (!item || userOwnsItem(user, itemId)) return;
+    if (!item) return;
+
+    if (item.type !== 'booster' && item.type !== 'rank' && userOwnsItem(user, itemId)) return;
+
+    if (item.type === 'rank' && getRankIndex(user.rank) >= getRankIndex(item.rankKey)) {
+        return;
+    }
 
     if (user.coins < item.price) {
         alert(`❌ Nicht genug Coins! Du brauchst ${item.price.toLocaleString('de-DE')} 🪙.`);
@@ -887,8 +1237,22 @@ window.buyShopItem = function(itemId) {
 
     const newCoins = user.coins - item.price;
     db.ref(`users/${user.id}/coins`).set(newCoins);
-    db.ref(`users/${user.id}/ownedItems/${itemId}`).set(true);
 
+    if (item.type === 'booster') {
+        activateBoosterForUser(user, item.boosterId);
+        playSmallWinSound();
+        addCloudLog(`⚡ ${user.id} (${user.username}) aktivierte Booster "${item.name}" für ${item.price} 🪙.`);
+        return;
+    }
+
+    if (item.type === 'rank') {
+        db.ref(`users/${user.id}/rank`).set(item.rankKey);
+        playJackpotFanfareSound();
+        addCloudLog(`🎖️ ${user.id} (${user.username}) kaufte Rang "${item.name}" für ${item.price} 🪙!`);
+        return;
+    }
+
+    db.ref(`users/${user.id}/ownedItems/${itemId}`).set(true);
     if (item.type === 'title') {
         db.ref(`users/${user.id}/equippedTitle`).set(item.badge);
     }
@@ -896,6 +1260,167 @@ window.buyShopItem = function(itemId) {
     playSmallWinSound();
     addCloudLog(`🛒 ${user.id} (${user.username}) kaufte "${item.name}" für ${item.price} 🪙.`);
 };
+
+// ==================== 6C. ÜBERWEISUNGS-FEATURE (SPIELER ZU SPIELER) ====================
+const transferModal = document.getElementById('transfer-modal');
+const transferTargetSelect = document.getElementById('transfer-target-select');
+const transferTargetIdInput = document.getElementById('transfer-target-id');
+const transferAmountInput = document.getElementById('transfer-amount-input');
+const transferFeedback = document.getElementById('transfer-feedback');
+const transferSubmitBtn = document.getElementById('transfer-submit-btn');
+
+function renderTransferTargets(currentUser) {
+    if (!transferTargetSelect || !currentUser) return;
+    const previousValue = transferTargetSelect.value;
+    transferTargetSelect.innerHTML = '<option value="">-- Spieler wählen oder unten ID eingeben --</option>';
+
+    getUsersArray()
+        .filter(u => !u.banned && u.id !== currentUser.id)
+        .sort((a, b) => (a.idNumber || 0) - (b.idNumber || 0))
+        .forEach(u => {
+            const opt = document.createElement('option');
+            opt.value = u.id;
+            opt.textContent = `${u.id} – ${u.username} (${(u.coins || 0).toLocaleString('de-DE')} 🪙)`;
+            transferTargetSelect.appendChild(opt);
+        });
+
+    if (previousValue) transferTargetSelect.value = previousValue;
+}
+
+function showTransferFeedback(message, isSuccess = false) {
+    if (!transferFeedback) return;
+    transferFeedback.textContent = message;
+    transferFeedback.className = isSuccess ? 'success-text' : 'error-text';
+    transferFeedback.classList.remove('hidden');
+}
+
+const openTransferBtn = document.getElementById('open-transfer-btn');
+if (openTransferBtn) {
+    openTransferBtn.addEventListener('click', () => {
+        const user = getCurrentUser();
+        if (!user) {
+            authModal.classList.remove('hidden');
+            return;
+        }
+        renderTransferTargets(user);
+        if (transferFeedback) transferFeedback.classList.add('hidden');
+        transferModal.classList.remove('hidden');
+    });
+}
+
+const closeTransferBtn = document.getElementById('close-transfer-btn');
+if (closeTransferBtn) {
+    closeTransferBtn.addEventListener('click', () => transferModal.classList.add('hidden'));
+}
+
+if (transferTargetSelect) {
+    transferTargetSelect.addEventListener('change', () => {
+        if (transferTargetSelect.value) {
+            transferTargetIdInput.value = transferTargetSelect.value;
+        }
+    });
+}
+
+document.querySelectorAll('.transfer-preset-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const addVal = parseInt(btn.getAttribute('data-amount'), 10) || 0;
+        const currVal = parseInt(transferAmountInput.value, 10) || 0;
+        transferAmountInput.value = Math.max(1, currVal + addVal);
+    });
+});
+
+if (transferSubmitBtn) {
+    transferSubmitBtn.addEventListener('click', async () => {
+        const sender = getCurrentUser();
+        if (!sender) {
+            authModal.classList.remove('hidden');
+            return;
+        }
+        if (sender.banned) {
+            showTransferFeedback('🚫 Dein Account ist gesperrt!');
+            return;
+        }
+        if (isSpinning || isWheelSpinning) {
+            showTransferFeedback('⏳ Bitte warte, bis der aktuelle Dreh beendet ist.');
+            return;
+        }
+
+        const rawTarget = (transferTargetIdInput.value || transferTargetSelect.value || '').trim();
+        const amount = parseInt(transferAmountInput.value, 10);
+
+        if (!rawTarget) {
+            showTransferFeedback('❌ Bitte eine Ziel-ID oder einen Spieler auswählen.');
+            return;
+        }
+        if (isNaN(amount) || amount < 1) {
+            showTransferFeedback('❌ Bitte einen gültigen Betrag (min. 1 🪙) eingeben.');
+            return;
+        }
+
+        const targetUser = findPlayerByIdInput(rawTarget) ||
+            getUsersArray().find(u => u.username.toLowerCase() === rawTarget.toLowerCase());
+
+        if (!targetUser) {
+            showTransferFeedback(`❌ Spieler "${rawTarget}" wurde nicht gefunden.`);
+            return;
+        }
+        if (targetUser.id === sender.id) {
+            showTransferFeedback('❌ Du kannst dir selbst keine Coins überweisen.');
+            return;
+        }
+        if (targetUser.banned) {
+            showTransferFeedback('🚫 An gesperrte Accounts können keine Coins überwiesen werden.');
+            return;
+        }
+        if ((sender.coins || 0) < amount) {
+            showTransferFeedback(`❌ Nicht genug Guthaben! Verfügbar: ${(sender.coins || 0).toLocaleString('de-DE')} 🪙.`);
+            return;
+        }
+
+        transferSubmitBtn.disabled = true;
+        try {
+            const txResult = await db.ref(`users/${sender.id}/coins`).transaction((curr) => {
+                if (typeof curr !== 'number' || curr < amount) return;
+                return curr - amount;
+            });
+
+            if (!txResult.committed) {
+                showTransferFeedback('❌ Nicht genug Guthaben für diese Überweisung.');
+                transferSubmitBtn.disabled = false;
+                return;
+            }
+
+            await db.ref(`users/${targetUser.id}/coins`).transaction((curr) => (curr || 0) + amount);
+
+            db.ref(`notifications/${targetUser.id}`).set({
+                message: `💸 ${sender.username} (${sender.id}) hat dir +${amount.toLocaleString('de-DE')} 🪙 überwiesen!`,
+                timestamp: Date.now()
+            });
+
+            playSmallWinSound();
+            addCloudLog(`💸 Überweisung: ${sender.id} (${sender.username}) überwies ${amount} 🪙 an ${targetUser.id} (${targetUser.username}).`);
+            showTransferFeedback(`✅ ${amount.toLocaleString('de-DE')} 🪙 erfolgreich an ${targetUser.username} (${targetUser.id}) überwiesen!`, true);
+            transferAmountInput.value = '100';
+        } catch (err) {
+            console.error(err);
+            showTransferFeedback('❌ Verbindungsfehler bei der Überweisung.');
+        }
+        transferSubmitBtn.disabled = false;
+    });
+}
+
+let lastNotificationTs = Date.now();
+db.ref('notifications').on('value', (snapshot) => {
+    const allNotes = snapshot.val() || {};
+    if (!currentUserId || !allNotes[currentUserId]) return;
+    const note = allNotes[currentUserId];
+    if (note && note.timestamp > lastNotificationTs) {
+        lastNotificationTs = note.timestamp;
+        db.ref(`notifications/${currentUserId}`).remove();
+        showGlobalBanner(note.message, true);
+        playSmallWinSound();
+    }
+});
 
 window.equipShopItem = function(itemId) {
     const user = getCurrentUser();
@@ -1020,12 +1545,13 @@ autoSpinBtn.addEventListener('click', () => {
     }
 });
 
-function getWeightedRandomSymbol() {
-    const totalWeight = symbols.reduce((sum, s) => sum + s.weight, 0);
+function getWeightedRandomSymbol(customWeights = null) {
+    const weights = customWeights || symbols.map(s => s.weight);
+    const totalWeight = weights.reduce((sum, w) => sum + w, 0);
     let random = Math.random() * totalWeight;
-    for (const sym of symbols) {
-        if (random < sym.weight) return sym;
-        random -= sym.weight;
+    for (let i = 0; i < symbols.length; i++) {
+        if (random < weights[i]) return symbols[i];
+        random -= weights[i];
     }
     return symbols[0];
 }
@@ -1047,11 +1573,17 @@ function generateSpinResults(user) {
         }
     }
 
+    const luckyMatchProb = hasActiveBooster(user, 'boost_luck') ? 0.075 : 0.035;
+    if (Math.random() < luckyMatchProb) {
+        const luckySym = getWeightedRandomSymbol(LUCKY_MATCH_WEIGHTS);
+        return [luckySym, luckySym, luckySym];
+    }
+
     return [getWeightedRandomSymbol(), getWeightedRandomSymbol(), getWeightedRandomSymbol()];
 }
 
 spinBtn.addEventListener('click', () => {
-    if (isSpinning) return;
+    if (isSpinning || isWheelSpinning) return;
 
     const user = getCurrentUser();
     if (!user) {
@@ -1089,6 +1621,7 @@ spinBtn.addEventListener('click', () => {
 
     const newBalanceAfterBet = user.coins - currentBet;
     db.ref(`users/${user.id}/coins`).set(newBalanceAfterBet);
+    db.ref(`users/${user.id}/totalWagered`).transaction(c => (c || 0) + currentBet);
 
     slotCard.classList.remove('shake');
     statusEl.classList.remove('status-win');
@@ -1160,6 +1693,13 @@ function updateLastWin(amount) {
     else lastWinBox.classList.remove('highlight-win');
 }
 
+function getActiveWinBoosterMultiplier(user) {
+    let mult = 1;
+    if (hasActiveBooster(user, 'boost_mult15')) mult *= 1.5;
+    if (hasActiveBooster(user, 'boost_mult20')) mult *= 2.0;
+    return mult;
+}
+
 function checkWin(results) {
     const [r1, r2, r3] = results;
     const user = getCurrentUser();
@@ -1168,18 +1708,21 @@ function checkWin(results) {
     const rankInfo = getRankInfo(user.rank);
     const rankBonus = rankInfo.bonus;
     const bonusPercent = Math.round((rankBonus - 1) * 100);
+    const boosterMult = getActiveWinBoosterMultiplier(user);
+    const boosterTag = boosterMult > 1 ? ` • ⚡×${boosterMult} Boost` : '';
 
     if (r1.icon === r2.icon && r2.icon === r3.icon) {
-        const winAmount = Math.round(currentBet * r1.multiplier * rankBonus);
+        const winAmount = Math.round(currentBet * r1.multiplier * rankBonus * boosterMult);
         const finalCoins = user.coins + winAmount;
         db.ref(`users/${user.id}/coins`).set(finalCoins);
+        db.ref(`users/${user.id}/totalWon`).transaction(w => (w || 0) + winAmount);
         updateLastWin(winAmount);
 
         reels.forEach(r => r.classList.add('win-glow'));
         slotCard.classList.add('shake');
 
         statusEl.classList.add('status-win');
-        statusEl.textContent = `🎉 ${r1.multiplier}x TREFFER! ${bonusPercent > 0 ? `(+${bonusPercent}% Rang-Bonus) ` : ''}Gewinn: ${winAmount.toLocaleString('de-DE')} 🪙!`;
+        statusEl.textContent = `🎉 ${r1.multiplier}x TREFFER! ${bonusPercent > 0 ? `(+${bonusPercent}% Rang${boosterTag}) ` : (boosterTag ? `(${boosterTag.slice(3)}) ` : '')}Gewinn: ${winAmount.toLocaleString('de-DE')} 🪙!`;
         addCloudLog(`🎉 ${r1.multiplier}x GEWINN für ${user.id} (${user.username}): +${winAmount} 🪙 (${r1.icon}${r2.icon}${r3.icon})`);
 
         if (r1.multiplier >= 15) {
@@ -1193,26 +1736,293 @@ function checkWin(results) {
             playSmallWinSound();
         }
     } else if (r1.icon === r2.icon || r2.icon === r3.icon || r1.icon === r3.icon) {
-        const smallWin = Math.floor(currentBet * 0.75 * rankBonus);
+        const smallWin = Math.floor(currentBet * 0.90 * rankBonus * boosterMult);
         const finalCoins = user.coins + smallWin;
         db.ref(`users/${user.id}/coins`).set(finalCoins);
+        db.ref(`users/${user.id}/totalWon`).transaction(w => (w || 0) + smallWin);
         updateLastWin(smallWin);
         playSmallWinSound();
         statusEl.classList.add('status-win');
-        statusEl.textContent = `✨ 2 Gleiche! Sie erhalten ${smallWin.toLocaleString('de-DE')} 🪙 zurück.`;
+        statusEl.textContent = `✨ 2 Gleiche! Sie erhalten ${smallWin.toLocaleString('de-DE')} 🪙 zurück${boosterTag}.`;
         if (finalCoins < BROKE_THRESHOLD_COINS) {
             setTimeout(() => checkAndShowBrokePopup(true), 600);
         }
     } else {
+        let finalCoins = user.coins;
+        if (hasActiveBooster(user, 'boost_cashback')) {
+            const cashback = Math.floor(currentBet * 0.25);
+            if (cashback > 0) {
+                finalCoins += cashback;
+                db.ref(`users/${user.id}/coins`).set(finalCoins);
+                db.ref(`users/${user.id}/totalWon`).transaction(w => (w || 0) + cashback);
+                updateLastWin(cashback);
+                playSmallWinSound();
+                statusEl.classList.add('status-win');
+                statusEl.textContent = `💸 Cashback-Schild: +${cashback.toLocaleString('de-DE')} 🪙 (25%) gerettet!`;
+                return;
+            }
+        }
         playLoseSound();
         updateLastWin(0);
         statusEl.classList.remove('status-win');
         statusEl.textContent = 'Kein Treffer. Versuchen Sie es erneut.';
-        if (user.coins < BROKE_THRESHOLD_COINS) {
+        if (finalCoins < BROKE_THRESHOLD_COINS) {
             setTimeout(() => checkAndShowBrokePopup(true), 600);
         }
     }
 }
+
+// ==================== 8B. GAMEMODE SWITCHER & GLÜCKSRAD ====================
+const modeSlotsBtn = document.getElementById('mode-slots-btn');
+const modeWheelBtn = document.getElementById('mode-wheel-btn');
+const slotsModeWrapper = document.getElementById('slots-mode-wrapper');
+const wheelModeWrapper = document.getElementById('wheel-mode-wrapper');
+const wheelCanvas = document.getElementById('lucky-wheel-canvas');
+const wheelSpinBtn = document.getElementById('wheel-spin-btn');
+const wheelStatusEl = document.getElementById('wheel-status-text');
+
+function switchGameMode(mode) {
+    if (isSpinning || isWheelSpinning) return;
+    activeGameMode = mode;
+    if (mode === 'wheel') {
+        stopAutoSpin();
+        if (slotsModeWrapper) slotsModeWrapper.classList.add('hidden');
+        if (wheelModeWrapper) wheelModeWrapper.classList.remove('hidden');
+        if (modeSlotsBtn) modeSlotsBtn.classList.remove('active');
+        if (modeWheelBtn) modeWheelBtn.classList.add('active');
+        drawLuckyWheel(wheelRotationRad);
+    } else {
+        if (wheelModeWrapper) wheelModeWrapper.classList.add('hidden');
+        if (slotsModeWrapper) slotsModeWrapper.classList.remove('hidden');
+        if (modeWheelBtn) modeWheelBtn.classList.remove('active');
+        if (modeSlotsBtn) modeSlotsBtn.classList.add('active');
+    }
+}
+
+if (modeSlotsBtn) modeSlotsBtn.addEventListener('click', () => switchGameMode('slots'));
+if (modeWheelBtn) modeWheelBtn.addEventListener('click', () => switchGameMode('wheel'));
+
+function drawLuckyWheel(rotationRad = 0) {
+    if (!wheelCanvas) return;
+    const ctx = wheelCanvas.getContext('2d');
+    const size = wheelCanvas.width;
+    const center = size / 2;
+    const radius = center - 6;
+    const count = WHEEL_SEGMENTS.length;
+    const sliceAngle = (Math.PI * 2) / count;
+
+    ctx.clearRect(0, 0, size, size);
+
+    for (let i = 0; i < count; i++) {
+        const seg = WHEEL_SEGMENTS[i];
+        const startAngle = rotationRad + i * sliceAngle;
+        const endAngle = startAngle + sliceAngle;
+
+        ctx.beginPath();
+        ctx.moveTo(center, center);
+        ctx.arc(center, center, radius, startAngle, endAngle);
+        ctx.closePath();
+        ctx.fillStyle = seg.color;
+        ctx.fill();
+
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#d4af37';
+        ctx.stroke();
+
+        ctx.save();
+        ctx.translate(center, center);
+        ctx.rotate(startAngle + sliceAngle / 2);
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = seg.textColor;
+        ctx.font = '800 13px "Plus Jakarta Sans", sans-serif';
+        ctx.fillText(seg.short, radius - 16, 0);
+        ctx.restore();
+    }
+
+    // Goldene Nieten am äußeren Rand
+    for (let i = 0; i < count; i++) {
+        const angle = rotationRad + i * sliceAngle;
+        const dotX = center + Math.cos(angle) * (radius - 6);
+        const dotY = center + Math.sin(angle) * (radius - 6);
+        ctx.beginPath();
+        ctx.arc(dotX, dotY, 3.2, 0, Math.PI * 2);
+        ctx.fillStyle = '#fcf6ba';
+        ctx.fill();
+    }
+}
+
+function renderWheelOdds() {
+    const grid = document.getElementById('wheel-odds-grid');
+    if (!grid) return;
+    grid.innerHTML = '';
+
+    WHEEL_SEGMENTS.forEach(seg => {
+        const div = document.createElement('div');
+        if (seg.type === 'rank') div.className = 'mythic-row';
+        else if (seg.type === 'booster' || seg.value >= 10000) div.className = 'legendary-row';
+        div.innerHTML = `${seg.label} = <span>${seg.prob.toFixed(seg.prob < 0.1 ? 2 : 1)}%</span>`;
+        grid.appendChild(div);
+    });
+}
+
+function pickWeightedWheelSegmentIndex() {
+    const totalProb = WHEEL_SEGMENTS.reduce((sum, s) => sum + s.prob, 0);
+    let r = Math.random() * totalProb;
+    for (let i = 0; i < WHEEL_SEGMENTS.length; i++) {
+        if (r < WHEEL_SEGMENTS[i].prob) return i;
+        r -= WHEEL_SEGMENTS[i].prob;
+    }
+    return 0;
+}
+
+function handleWheelPrize(user, seg) {
+    const rankInfo = getRankInfo(user.rank);
+
+    if (seg.type === 'coins') {
+        if (seg.value > 0) {
+            db.ref(`users/${user.id}/coins`).transaction(c => (c || 0) + seg.value);
+            db.ref(`users/${user.id}/totalWon`).transaction(w => (w || 0) + seg.value);
+            updateLastWin(seg.value);
+            wheelStatusEl.classList.add('status-win');
+            wheelStatusEl.textContent = `🎉 GLÜCKSRAD-TREFFER: +${seg.value.toLocaleString('de-DE')} 🪙 gewonnen!`;
+            addCloudLog(`🎡 Glücksrad: ${user.id} (${user.username}) gewann +${seg.value} 🪙.`);
+            if (seg.value >= 10000) {
+                playJackpotFanfareSound();
+                triggerMegaWinAnimation(user, { key: 'diamond', icon: '💎' }, seg.value);
+                pushGlobalBroadcast(`🎡 GLÜCKSRAD JACKPOT: [${rankInfo.label}] ${user.username} (${user.id}) hat ${seg.value.toLocaleString('de-DE')} 🪙 am Glücksrad gewonnen!`, true);
+            } else {
+                playSmallWinSound();
+            }
+        } else {
+            updateLastWin(0);
+            playLoseSound();
+            wheelStatusEl.classList.remove('status-win');
+            wheelStatusEl.textContent = '💀 Leider eine Niete! Dreh gleich nochmal.';
+        }
+    } else if (seg.type === 'booster') {
+        const booster = BOOSTERS[seg.value];
+        activateBoosterForUser(user, seg.value);
+        updateLastWin(0);
+        playJackpotFanfareSound();
+        wheelStatusEl.classList.add('status-win');
+        wheelStatusEl.textContent = `⚡ SELTENER BOOST! ${booster.name} aktiviert!`;
+        addCloudLog(`🎡⚡ Glücksrad-Boost: ${user.id} (${user.username}) gewann ${booster.name}!`);
+    } else if (seg.type === 'rank') {
+        const wonRankKey = seg.value;
+        const wonRankInfo = getRankInfo(wonRankKey);
+        const currentIdx = getRankIndex(user.rank);
+        const targetIdx = getRankIndex(wonRankKey);
+
+        if (targetIdx > currentIdx) {
+            db.ref(`users/${user.id}/rank`).set(wonRankKey);
+            updateLastWin(0);
+            playJackpotFanfareSound();
+            wheelStatusEl.classList.add('status-win');
+            wheelStatusEl.textContent = `👑 JACKPOT! Neuer Rang freigeschaltet: ${wonRankInfo.label}!`;
+            addCloudLog(`🎡👑 RANG-JACKPOT am Glücksrad: ${user.id} (${user.username}) gewann ${wonRankInfo.label}!`);
+            pushGlobalBroadcast(`🎡👑 UNGLAUBLICH! ${user.username} (${user.id}) hat am Glücksrad den Rang ${wonRankInfo.label} gewonnen!`, true);
+        } else {
+            const comp = seg.dupCoins || 5000;
+            db.ref(`users/${user.id}/coins`).transaction(c => (c || 0) + comp);
+            db.ref(`users/${user.id}/totalWon`).transaction(w => (w || 0) + comp);
+            updateLastWin(comp);
+            playJackpotFanfareSound();
+            wheelStatusEl.classList.add('status-win');
+            wheelStatusEl.textContent = `👑 ${wonRankInfo.label} (bereits aktiv) → +${comp.toLocaleString('de-DE')} 🪙 Ersatz-Bonus!`;
+            addCloudLog(`🎡 Glücksrad Rang-Duplikat für ${user.id} (${user.username}): +${comp} 🪙.`);
+        }
+    }
+
+    setTimeout(() => {
+        const fresh = getCurrentUser();
+        if (fresh && fresh.coins < BROKE_THRESHOLD_COINS) {
+            checkAndShowBrokePopup(true);
+        }
+    }, 600);
+}
+
+if (wheelSpinBtn) {
+    wheelSpinBtn.addEventListener('click', () => {
+        if (isWheelSpinning || isSpinning) return;
+
+        const user = getCurrentUser();
+        if (!user) {
+            authModal.classList.remove('hidden');
+            return;
+        }
+        if (user.banned) {
+            wheelStatusEl.classList.remove('status-win');
+            wheelStatusEl.textContent = '🚫 Ihr Account wurde gesperrt!';
+            return;
+        }
+        if (user.coins < WHEEL_SPIN_COST) {
+            wheelStatusEl.classList.remove('status-win');
+            wheelStatusEl.textContent = `❌ Du brauchst mindestens ${WHEEL_SPIN_COST.toLocaleString('de-DE')} 🪙 für einen Dreh!`;
+            if (user.coins < BROKE_THRESHOLD_COINS) checkAndShowBrokePopup(true);
+            return;
+        }
+
+        isWheelSpinning = true;
+        wheelSpinBtn.disabled = true;
+        wheelStatusEl.classList.remove('status-win');
+        wheelStatusEl.textContent = '🎡 Das Glücksrad dreht...';
+
+        db.ref(`users/${user.id}/coins`).set(user.coins - WHEEL_SPIN_COST);
+        db.ref(`users/${user.id}/totalWagered`).transaction(w => (w || 0) + WHEEL_SPIN_COST);
+        addCloudLog(`🎡 ${user.id} (${user.username}) dreht das Glücksrad (-${WHEEL_SPIN_COST} 🪙)`);
+
+        const winningIndex = pickWeightedWheelSegmentIndex();
+        const winningSeg = WHEEL_SEGMENTS[winningIndex];
+        const count = WHEEL_SEGMENTS.length;
+        const sliceAngle = (Math.PI * 2) / count;
+
+        // Pointer sitzt oben bei -PI / 2 (270°)
+        const jitter = (Math.random() - 0.5) * sliceAngle * 0.55;
+        const targetMod = ((-Math.PI / 2) - (winningIndex + 0.5) * sliceAngle + jitter) % (Math.PI * 2);
+        const normalizedTargetMod = (targetMod + Math.PI * 2) % (Math.PI * 2);
+        const currentMod = ((wheelRotationRad % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+        let delta = normalizedTargetMod - currentMod;
+        if (delta <= 0) delta += Math.PI * 2;
+
+        const extraSpins = (5 + Math.floor(Math.random() * 3)) * Math.PI * 2;
+        const startRot = wheelRotationRad;
+        const endRot = startRot + extraSpins + delta;
+        const durationMs = 4500;
+        const startTime = performance.now();
+        let lastTickSlice = Math.floor(startRot / sliceAngle);
+
+        function animateWheel(now) {
+            const elapsed = now - startTime;
+            const t = Math.min(1, elapsed / durationMs);
+            const eased = 1 - Math.pow(1 - t, 3);
+            wheelRotationRad = startRot + (endRot - startRot) * eased;
+            drawLuckyWheel(wheelRotationRad);
+
+            const currentSlice = Math.floor(wheelRotationRad / sliceAngle);
+            if (currentSlice !== lastTickSlice) {
+                lastTickSlice = currentSlice;
+                playWheelTickSound();
+            }
+
+            if (t < 1) {
+                requestAnimationFrame(animateWheel);
+            } else {
+                wheelRotationRad = endRot;
+                drawLuckyWheel(wheelRotationRad);
+                isWheelSpinning = false;
+                wheelSpinBtn.disabled = false;
+                const freshUser = getCurrentUser();
+                if (freshUser) handleWheelPrize(freshUser, winningSeg);
+            }
+        }
+
+        requestAnimationFrame(animateWheel);
+    });
+}
+
+drawLuckyWheel(0);
+renderWheelOdds();
 
 function triggerMegaWinAnimation(user, symbolObj, winAmount) {
     const overlay = document.getElementById('mega-win-overlay');
