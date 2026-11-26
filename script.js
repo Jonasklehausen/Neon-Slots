@@ -1521,6 +1521,10 @@ function pullLeverAnimation() {
 
 if (leverAssembly) {
     leverAssembly.addEventListener('click', () => {
+        if (runawayActive) {
+            window.dispatchEvent(new MouseEvent('mousemove', { clientX: window.innerWidth / 2, clientY: window.innerHeight / 2 }));
+            return;
+        }
         if (!spinBtn.disabled) spinBtn.click();
     });
 }
@@ -2439,23 +2443,99 @@ function activateRunawaySpinButton(durationMs = 15000) {
     if (runawayActive) return;
     runawayActive = true;
 
-    const dodgeHandler = () => {
+    const targetBtn = activeGameMode === 'wheel' && wheelSpinBtn ? wheelSpinBtn : spinBtn;
+    const originalText = targetBtn.textContent;
+    const rect = targetBtn.getBoundingClientRect();
+    const taunts = ['🏃‍♂️ FANG MICH!', '💨 ZU LANGSAM!', '😜 NOPE!', '⚡ HIER DRÜBEN!', '🤡 NICHT SO SCHNELL!'];
+
+    targetBtn.style.position = 'fixed';
+    targetBtn.style.width = `${rect.width}px`;
+    targetBtn.style.left = `${rect.left}px`;
+    targetBtn.style.top = `${rect.top}px`;
+    targetBtn.style.margin = '0';
+    targetBtn.style.zIndex = '250';
+    targetBtn.style.transition = 'left 0.055s cubic-bezier(0.2, 1, 0.3, 1), top 0.055s cubic-bezier(0.2, 1, 0.3, 1), transform 0.055s ease-out';
+
+    let lastJumpAt = 0;
+
+    const fleeFromPoint = (pointerX, pointerY, force = false) => {
         if (!runawayActive) return;
-        const randX = Math.floor(Math.random() * 240) - 120;
-        const randY = Math.floor(Math.random() * 140) - 70;
-        spinBtn.style.transform = `translate(${randX}px, ${randY}px)`;
-        spinBtn.style.transition = 'transform 0.12s ease-out';
+        const now = performance.now();
+        if (!force && now - lastJumpAt < 45) return;
+        lastJumpAt = now;
+
+        const pad = 20;
+        const btnW = targetBtn.offsetWidth || rect.width || 220;
+        const btnH = targetBtn.offsetHeight || rect.height || 48;
+        const maxX = Math.max(pad, window.innerWidth - btnW - pad);
+        const maxY = Math.max(pad, window.innerHeight - btnH - pad);
+
+        let nextX = pad + Math.random() * (maxX - pad);
+        let nextY = pad + Math.random() * (maxY - pad);
+
+        // Immer weit weg vom Mauszeiger springen
+        for (let attempt = 0; attempt < 10; attempt++) {
+            const candidateX = pad + Math.random() * (maxX - pad);
+            const candidateY = pad + Math.random() * (maxY - pad);
+            const dx = (candidateX + btnW / 2) - pointerX;
+            const dy = (candidateY + btnH / 2) - pointerY;
+            if (Math.hypot(dx, dy) >= 260) {
+                nextX = candidateX;
+                nextY = candidateY;
+                break;
+            }
+        }
+
+        const tilt = Math.floor(Math.random() * 24) - 12;
+        targetBtn.style.left = `${Math.round(nextX)}px`;
+        targetBtn.style.top = `${Math.round(nextY)}px`;
+        targetBtn.style.transform = `rotate(${tilt}deg) scale(1.04)`;
+        targetBtn.textContent = taunts[Math.floor(Math.random() * taunts.length)];
     };
 
-    spinBtn.addEventListener('mouseenter', dodgeHandler);
-    spinBtn.addEventListener('touchstart', dodgeHandler, { passive: true });
-    statusEl.textContent = '🏃‍♂️ Hoppla! Dein Spin-Button hat Angst vor dir!';
+    const mouseMoveHandler = (e) => {
+        if (!runawayActive) return;
+        const bRect = targetBtn.getBoundingClientRect();
+        const cx = bRect.left + bRect.width / 2;
+        const cy = bRect.top + bRect.height / 2;
+        const dist = Math.hypot(e.clientX - cx, e.clientY - cy);
+        if (dist < 135) {
+            fleeFromPoint(e.clientX, e.clientY);
+        }
+    };
+
+    const directDodgeHandler = (e) => {
+        if (!runawayActive) return;
+        e.preventDefault();
+        e.stopPropagation();
+        const pt = (e.touches && e.touches[0]) || e;
+        fleeFromPoint(pt.clientX || window.innerWidth / 2, pt.clientY || window.innerHeight / 2, true);
+    };
+
+    window.addEventListener('mousemove', mouseMoveHandler, { passive: true });
+    targetBtn.addEventListener('mouseenter', directDodgeHandler);
+    targetBtn.addEventListener('mousedown', directDodgeHandler);
+    targetBtn.addEventListener('touchstart', directDodgeHandler, { passive: false });
+
+    statusEl.textContent = '🏃‍♂️ Hoppla! Dein Spin-Button flieht quer über den Bildschirm!';
+    if (wheelStatusEl) wheelStatusEl.textContent = '🏃‍♂️ Hoppla! Dein Dreh-Button flieht quer über den Bildschirm!';
+    fleeFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2, true);
 
     setTimeout(() => {
         runawayActive = false;
-        spinBtn.removeEventListener('mouseenter', dodgeHandler);
-        spinBtn.removeEventListener('touchstart', dodgeHandler);
-        spinBtn.style.transform = '';
+        window.removeEventListener('mousemove', mouseMoveHandler);
+        targetBtn.removeEventListener('mouseenter', directDodgeHandler);
+        targetBtn.removeEventListener('mousedown', directDodgeHandler);
+        targetBtn.removeEventListener('touchstart', directDodgeHandler);
+        targetBtn.style.position = '';
+        targetBtn.style.width = '';
+        targetBtn.style.left = '';
+        targetBtn.style.top = '';
+        targetBtn.style.margin = '';
+        targetBtn.style.zIndex = '';
+        targetBtn.style.transform = '';
+        targetBtn.style.transition = '';
+        targetBtn.textContent = originalText;
     }, durationMs);
 }
 
