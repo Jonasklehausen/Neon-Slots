@@ -4,8 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AURELIA ROYALE | Private Gold Casino</title>
-    <link rel="stylesheet" href="style.css?v=20261127">
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800;900&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=20261128">
 </head>
 <body>
 
@@ -29,59 +28,55 @@
 
     <!-- Navbar -->
     <header class="navbar">
-        <div class="logo">AURELIA<span>ROYALE</span></div>
+        <p class="logo">AURELIA<span>ROYALE</span></p>
         
-        <div class="stats-bar">
+        <nav class="stats-bar" aria-label="Spielerbereich">
             <div id="user-profile-badge" class="wallet user-badge hidden">
                 <span id="display-user-id" class="id-tag">ID1</span>
                 <strong id="display-username">Spieler</strong>
                 <span id="display-rank-badge" class="rank-pill rank-member">👤 Member</span>
             </div>
 
-            <div class="wallet last-win-box">
+            <output class="wallet last-win-box">
                 <span>Letzter Gewinn:</span>
-                <strong id="last-win">0</strong> 🪙
-            </div>
+                <strong id="last-win">0</strong> Coins
+            </output>
 
-            <div class="wallet balance-box">
+            <output class="wallet balance-box">
                 <span>Guthaben:</span>
-                <strong id="balance">0</strong> 🪙
-            </div>
+                <strong id="balance">0</strong> Coins
+            </output>
 
-            <button id="mute-btn" class="nav-link-btn" type="button" title="Sound an/aus">🔊</button>
-            <button id="open-transfer-btn" class="nav-link-btn" type="button" title="Coins überweisen">💸 Überweisen</button>
-            <button id="open-shop-btn" class="nav-link-btn shop-nav-btn" type="button" title="Zum Coin-Shop">🛒 Shop</button>
-            <a href="#leaderboard-section" class="nav-link-btn" title="Zum Live Leaderboard">🏆 Rangliste</a>
-            <a href="#live-chat-section" class="nav-link-btn" title="Zum Live Chat">💬 Chat</a>
-            <button id="logout-btn" class="logout-btn hidden" type="button" title="Ausloggen">🚪 Logout</button>
-            <button id="open-admin-btn" class="admin-trigger-btn hidden" type="button" title="Admin Konsole öffnen">🔒 Admin</button>
-        </div>
+            <button id="mute-btn" class="nav-link-btn" type="button" title="Sound an/aus">Ton</button>
+            <button id="open-transfer-btn" class="nav-link-btn" type="button">Überweisen</button>
+            <button id="open-shop-btn" class="nav-link-btn shop-nav-btn" type="button">Shop</button>
+            <a href="#leaderboard-section" class="nav-link-btn">Rangliste</a>
+            <a href="#live-chat-section" class="nav-link-btn">Chat</a>
+            <button id="logout-btn" class="logout-btn hidden" type="button">Abmelden</button>
+            <button id="open-admin-btn" class="admin-trigger-btn hidden" type="button">Admin</button>
+        </nav>
     </header>
 
     <!-- Hauptbereich -->
     <main class="container">
 
         <!-- Gamemode-Wechsel (Slots / Glücksrad) -->
-        <div class="mode-switcher" role="tablist" aria-label="Spielmodus wählen">
-            <button id="mode-slots-btn" class="mode-tab active" type="button">🎰 Imperial Slots</button>
-            <button id="mode-wheel-btn" class="mode-tab" type="button">🎡 Glücksrad</button>
-        </div>
+        <nav class="mode-switcher" role="tablist" aria-label="Spielmodus wählen">
+            <button id="mode-slots-btn" class="mode-tab active" type="button">Slots</button>
+            <button id="mode-wheel-btn" class="mode-tab" type="button">Glücksrad</button>
+        </nav>
 
         <!-- Aktive Kurzzeit-Booster Anzeige -->
-        <div id="active-boosters-bar" class="active-boosters-bar hidden"></div>
+        <aside id="active-boosters-bar" class="active-boosters-bar hidden"></aside>
 
-        <!-- ECHTE 3D VINTAGE SLOT MASCHINE -->
+        <!-- Slots -->
         <section id="slots-mode-wrapper" class="mode-panel">
-        <div class="cabinet-wrapper">
-            <div id="slot-card" class="vintage-cabinet">
-                
+            <article id="slot-card" class="vintage-cabinet">
                 <header class="cabinet-hood">
-                    <h2 class="hood-title">IMPERIAL FORTUNE</h2>
+                    <h1 class="hood-title">Slots</h1>
                 </header>
 
                 <section class="cabinet-body">
-                    <div class="gold-pointer-top">▼</div>
-                    
                     <div class="reels-bezel">
                         <div class="reels-container">
                             <div class="reel" id="reel1"><span class="reel-symbol">💎</span></div>
@@ -91,106 +86,77 @@
                     </div>
 
                     <div class="status-plate-row">
-                        <output id="status-text" class="status-text">Einsatz wählen & Hebel ziehen!</output>
+                        <output id="status-text" class="status-text">Einsatz wählen und drehen.</output>
                     </div>
                 </section>
 
-                <div class="cabinet-base">
-                    <div class="payout-tray">
-                        <div class="controls">
-                            <div class="bet-input-wrapper">
-                                <label for="bet-input">Einsatz (min. 1 🪙):</label>
-                                <input type="number" id="bet-input" value="50" min="1" step="1">
-                            </div>
-                            <button id="spin-btn" class="btn-spin" type="button">HEBEL ZIEHEN / SPIN</button>
-
-                            <div class="cabinet-extra-row">
-                                <button id="auto-spin-btn" class="cabinet-sub-btn" type="button">🤖 Auto-Spin (🔒 1.500 🪙)</button>
-                                <button id="open-shop-cabinet-btn" class="cabinet-sub-btn" type="button">🛒 Coin-Shop</button>
-                            </div>
-
-                            <div class="passive-bonus-strip">
-                                ⏳ Gratis-Bonus: +10 🪙 in <strong id="passive-timer-text">05:00</strong>
-                            </div>
-                        </div>
+                <footer class="cabinet-base">
+                    <label class="bet-input-wrapper" for="bet-input">
+                        <span>Einsatz</span>
+                        <input type="number" id="bet-input" value="50" min="1" step="1">
+                    </label>
+                    <button id="spin-btn" class="btn-spin" type="button">Drehen</button>
+                    <div class="cabinet-extra-row">
+                        <button id="auto-spin-btn" class="cabinet-sub-btn" type="button">Auto-Spin · 1.500 Coins</button>
+                        <button id="open-shop-cabinet-btn" class="cabinet-sub-btn" type="button">Coin-Shop</button>
                     </div>
+                    <p class="passive-bonus-strip">Nächster Bonus · +10 Coins in <strong id="passive-timer-text">05:00</strong></p>
+                </footer>
+                <button class="lever-assembly" id="lever-assembly" type="button" aria-label="Spin starten">
+                    <span class="lever-arm" id="lever-arm"></span>
+                </button>
+            </article>
 
-                </div>
-
-            </div>
-
-            <div class="lever-assembly" id="lever-assembly" title="Hebel ziehen zum Drehen!">
-                <div class="lever-mount"></div>
-                <div class="lever-arm" id="lever-arm">
-                    <div class="lever-knob"></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Erweiterte Gewinntabelle -->
-        <section class="paytable">
-            <h3>✦ AUSZAHLUNGSTABELLE (3 GLEICHE SYMBOLE) ✦</h3>
-            <div class="paytable-grid">
-                <div class="mythic-row">🌌 🌌 🌌 (Mythisch) = <span>1000x</span></div>
-                <div class="legendary-row">👑 👑 👑 (Ultra-Selten) = <span>250x</span></div>
-                <div class="epic-row">7️⃣ 7️⃣ 7️⃣ (Jackpot) = <span>50x</span></div>
-                <div>💎 💎 💎 (Selten) = <span>15x</span></div>
-                <div>🔔 🔔 🔔 = <span>5x</span></div>
-                <div>🍒 / 🍋 = <span>2x - 3x</span></div>
-            </div>
-        </section>
+            <aside class="paytable">
+                <h2>Auszahlungen</h2>
+                <ul class="paytable-grid">
+                    <li class="mythic-row"><span>🌌 ×3 · Mythisch</span><strong>1.000×</strong></li>
+                    <li class="legendary-row"><span>👑 ×3 · Ultra-selten</span><strong>250×</strong></li>
+                    <li class="epic-row"><span>7️⃣ ×3 · Jackpot</span><strong>50×</strong></li>
+                    <li><span>💎 ×3 · Selten</span><strong>15×</strong></li>
+                    <li><span>🔔 ×3</span><strong>5×</strong></li>
+                    <li><span>🍒 / 🍋</span><strong>2–3×</strong></li>
+                </ul>
+            </aside>
         </section>
 
-        <!-- NEUER GAMEMODE: GLÜCKSRAD -->
+        <!-- Glücksrad -->
         <section id="wheel-mode-wrapper" class="mode-panel hidden">
-            <div class="vintage-cabinet wheel-cabinet">
+            <article class="vintage-cabinet wheel-cabinet">
                 <header class="cabinet-hood">
-                    <h2 class="hood-title">WHEEL OF FORTUNE</h2>
+                    <h1 class="hood-title">Glücksrad</h1>
                 </header>
 
                 <div class="cabinet-body wheel-body">
-                    <div class="wheel-stage">
+                    <div class="wheel-bezel">
                         <div class="wheel-pointer">▼</div>
-                        <div class="wheel-bezel">
-                            <canvas id="lucky-wheel-canvas" width="380" height="380"></canvas>
-                            <div class="wheel-center-cap">👑</div>
-                        </div>
+                        <canvas id="lucky-wheel-canvas" width="380" height="380"></canvas>
+                        <div class="wheel-center-cap">A</div>
                     </div>
 
                     <div class="status-plate-row">
-                        <output id="wheel-status-text" class="status-text">Drehe für Coins, Boosts &amp; exklusive Ränge!</output>
+                        <output id="wheel-status-text" class="status-text">Drehen für Coins, Boosts und Ränge.</output>
                     </div>
                 </div>
 
-                <div class="cabinet-base">
-                    <div class="payout-tray">
-                        <div class="controls">
-                            <div class="bet-input-wrapper">
-                                <label>Einsatz pro Dreh:</label>
-                                <strong style="color: var(--gold-light); font-size: 1.08rem;">1.000 🪙</strong>
-                            </div>
-                            <button id="wheel-spin-btn" class="btn-spin" type="button">GLÜCKSRAD DREHEN (1.000 🪙)</button>
-                        </div>
-                    </div>
+                <footer class="cabinet-base">
+                    <p class="wheel-entry">Einsatz pro Dreh <strong>1.000 Coins</strong></p>
+                    <button id="wheel-spin-btn" class="btn-spin" type="button">Rad drehen</button>
+                </footer>
+            </article>
 
-                </div>
-            </div>
-
-            <section class="paytable">
-                <h3>✦ GLÜCKSRAD – GEWINNE &amp; CHANCEN ✦</h3>
-                <div id="wheel-odds-grid" class="paytable-grid"></div>
-            </section>
+            <aside class="paytable">
+                <h2>Gewinne &amp; Chancen</h2>
+                <ul id="wheel-odds-grid" class="paytable-grid"></ul>
+            </aside>
         </section>
 
         <!-- VERMÖGENS-SKALA & GEWINN-BILANZ -->
         <section id="profit-scale-card" class="profit-scale-card hidden">
-            <div class="profit-scale-header">
-                <div>
-                    <span class="subtitle-crown" style="margin-bottom: 2px;">✦ BILANZ-TRACKER ✦</span>
-                    <h3>VERMÖGENS-SKALA &amp; GEWINN</h3>
-                </div>
+            <header class="profit-scale-header">
+                <h2>Gewinnübersicht</h2>
                 <span id="scale-net-badge" class="scale-net-badge">±0 🪙</span>
-            </div>
+            </header>
 
             <div class="scale-bar-wrapper">
                 <div class="scale-track">
@@ -205,31 +171,19 @@
                 </div>
             </div>
 
-            <div class="scale-stats-grid">
-                <div class="scale-stat-item">
-                    <span>Gestartet mit</span>
-                    <strong id="scale-start-value">2.500 🪙</strong>
-                </div>
-                <div class="scale-stat-item">
-                    <span>Aktuelles Guthaben</span>
-                    <strong id="scale-current-value">0 🪙</strong>
-                </div>
-                <div class="scale-stat-item">
-                    <span>Erspielte Gewinne</span>
-                    <strong id="scale-total-won">0 🪙</strong>
-                </div>
-            </div>
+            <dl class="scale-stats-grid">
+                <dt>Gestartet mit</dt><dd id="scale-start-value">2.500 🪙</dd>
+                <dt>Aktuelles Guthaben</dt><dd id="scale-current-value">0 🪙</dd>
+                <dt>Erspielte Gewinne</dt><dd id="scale-total-won">0 🪙</dd>
+            </dl>
         </section>
 
         <!-- LIVE HIGH-ROLLER LEADERBOARD -->
         <section id="leaderboard-section" class="leaderboard-card">
-            <div class="leaderboard-header">
-                <div>
-                    <span class="subtitle-crown" style="margin-bottom: 2px;">✦ HALL OF FAME ✦</span>
-                    <h2>LIVE HIGH-ROLLER LEADERBOARD</h2>
-                </div>
-                <span class="live-indicator"><span class="pulse-dot"></span> CLOUD LIVE</span>
-            </div>
+            <header class="leaderboard-header">
+                <h2>Rangliste</h2>
+                <span class="live-indicator"><span class="pulse-dot"></span> LIVE</span>
+            </header>
 
             <div class="leaderboard-table-wrapper">
                 <table class="leaderboard-table">
@@ -249,16 +203,13 @@
 
         <!-- LIVE LOUNGE CHAT -->
         <section id="live-chat-section" class="leaderboard-card live-chat-card">
-            <div class="leaderboard-header">
-                <div>
-                    <span class="subtitle-crown" style="margin-bottom: 2px;">✦ VIP LOUNGE ✦</span>
-                    <h2>LIVE CASINO CHAT</h2>
-                </div>
-                <span class="live-indicator"><span class="pulse-dot"></span> LIVE CHAT</span>
-            </div>
+            <header class="leaderboard-header">
+                <h2>Chat</h2>
+                <span class="live-indicator"><span class="pulse-dot"></span> LIVE</span>
+            </header>
 
             <div id="chat-messages" class="chat-messages">
-                <div class="chat-empty">Chat wird geladen...</div>
+                <p class="chat-empty">Chat wird geladen...</p>
             </div>
 
             <div class="chat-input-row">
@@ -298,15 +249,15 @@
             <h2 id="auth-title">Willkommen im Club</h2>
             <p id="auth-subtitle" class="modal-desc">Melden Sie sich mit Ihrem Usernamen und Passwort an.</p>
 
-            <div class="form-group">
-                <label for="auth-username">Username:</label>
+            <label class="form-group" for="auth-username">
+                <span>Username</span>
                 <input type="text" id="auth-username" placeholder="z. B. Lukas99" class="admin-input" autocomplete="username">
-            </div>
+            </label>
 
-            <div class="form-group">
-                <label for="auth-password">Passwort:</label>
+            <label class="form-group" for="auth-password">
+                <span>Passwort</span>
                 <input type="password" id="auth-password" placeholder="••••••••" class="admin-input" autocomplete="current-password">
-            </div>
+            </label>
 
             <p id="auth-error" class="error-text hidden"></p>
 
@@ -336,22 +287,22 @@
             </div>
             <p class="modal-desc">Dein aktuelles Guthaben: <strong id="transfer-balance-display" style="color: var(--gold-light);">0</strong> 🪙</p>
 
-            <div class="form-group">
-                <label for="transfer-target-select">Empfänger auswählen:</label>
+            <label class="form-group" for="transfer-target-select">
+                <span>Empfänger auswählen</span>
                 <select id="transfer-target-select" class="admin-input">
                     <option value="">-- Spieler wählen oder unten ID eingeben --</option>
                 </select>
-            </div>
+            </label>
 
-            <div class="form-group">
-                <label for="transfer-target-id">Oder Ziel-ID eingeben (z. B. ID2):</label>
+            <label class="form-group" for="transfer-target-id">
+                <span>Oder Ziel-ID eingeben (z. B. ID2)</span>
                 <input type="text" id="transfer-target-id" placeholder="z. B. ID2" class="admin-input">
-            </div>
+            </label>
 
-            <div class="form-group">
-                <label for="transfer-amount-input">Betrag (min. 1 🪙):</label>
+            <label class="form-group" for="transfer-amount-input">
+                <span>Betrag (min. 1 Coin)</span>
                 <input type="number" id="transfer-amount-input" value="100" min="1" step="1" class="admin-input">
-            </div>
+            </label>
 
             <div class="btn-row" style="margin-bottom: 14px; flex-wrap: wrap;">
                 <button class="mini-btn mini-select transfer-preset-btn" type="button" data-amount="100">+100</button>
@@ -410,7 +361,7 @@
             </div>
 
             <div class="admin-grid">
-                <div class="admin-card">
+                <section class="admin-card">
                     <h3>💰 Coins & Ränge per ID vergeben</h3>
                     <p class="small-info">Gib eine ID ein (z. B. <strong>ID1</strong>) für Coins oder Rang-Upgrade:</p>
                     
@@ -448,19 +399,19 @@
                         <input type="number" id="rain-amount-input" value="1000" step="100" class="admin-input">
                         <button id="admin-rain-btn" class="btn-admin-gold" type="button">🌧️ Coin-Rain an ALLE</button>
                     </div>
-                </div>
+                </section>
 
-                <div class="admin-card">
+                <section class="admin-card">
                     <h3>🎯 Nächsten Spin für bestimmten User triggern</h3>
                     <p class="small-info">Wähle eine User-ID und bestimme exakt, was er beim nächsten Spin hittet:</p>
                     
-                    <div class="form-group">
-                        <label>Ziel-User ID (z. B. ID1):</label>
+                    <label class="form-group" for="rig-user-id-input">
+                        <span>Ziel-User-ID</span>
                         <input type="text" id="rig-user-id-input" placeholder="ID1" class="admin-input">
-                    </div>
+                    </label>
 
-                    <div class="form-group">
-                        <label>Gewünschtes Ergebnis:</label>
+                    <label class="form-group" for="rig-outcome-select">
+                        <span>Gewünschtes Ergebnis</span>
                         <select id="rig-outcome-select" class="admin-input">
                             <option value="cosmic">🌌 1000x COSMIC DRAGON (Mythisch)</option>
                             <option value="crown">👑 250x GOD CROWN (Ultra-Selten)</option>
@@ -471,18 +422,18 @@
                             <option value="cherry">🍒 2x KIRSCHE</option>
                             <option value="lose">💀 Garantierte Niete</option>
                         </select>
-                    </div>
+                    </label>
 
                     <button id="trigger-user-spin-btn" class="btn-admin-gold" style="width: 100%;" type="button">⚡ Nächsten Spin für User programmieren</button>
                     <div id="active-rigs-list" class="active-rigs-list"></div>
-                </div>
+                </section>
 
-                <div class="admin-card">
+                <section class="admin-card">
                     <h3>👥 Registrierte Accounts (<span id="total-users-count">0</span>)</h3>
                     <div id="player-list-container" class="player-list"></div>
-                </div>
+                </section>
 
-                <div class="admin-card">
+                <section class="admin-card">
                     <h3>📢 Globaler Server-Broadcast</h3>
                     <div class="btn-row" style="margin-bottom: 15px;">
                         <input type="text" id="admin-broadcast-input" placeholder="Nachricht an alle..." class="admin-input">
@@ -492,10 +443,10 @@
                     <h3>📟 Live Admin & Server-Logs</h3>
                     <div id="admin-logs" class="admin-logs"></div>
                     <button id="clear-logs-btn" class="btn-admin-secondary" style="margin-top: 8px;" type="button">Logs leeren</button>
-                </div>
+                </section>
 
                 <!-- TROLL-ZENTRALE -->
-                <div class="admin-card" style="grid-column: 1 / -1; border-color: rgba(239, 68, 68, 0.45);">
+                <section class="admin-card" style="grid-column: 1 / -1; border-color: rgba(239, 68, 68, 0.45);">
                     <h3>😈 Troll-Zentrale (Live-Trolling)</h3>
                     <p class="small-info">Wähle eine Ziel-ID (z. B. <strong>ID2</strong>) für Einzel-Trolls oder nutze den Server-Troll:</p>
 
@@ -515,7 +466,7 @@
                         <button class="btn-admin-success" type="button" onclick="sendTrollCommand('magnet')">🧲 Magnet-Walzen (60s Buff)</button>
                         <button class="btn-admin-gold" type="button" onclick="sendGlobalTroll('earthquake')">🌪️ Server-Erdbeben (ALLE)</button>
                     </div>
-                </div>
+                </section>
             </div>
         </div>
     </div>

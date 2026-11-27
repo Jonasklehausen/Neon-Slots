@@ -8,7 +8,7 @@
 [![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)]()
 [![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)]()
 
-*Ein luxuriöses Browser-Slot-Game im edlen Schwarz-Gold-Design mit 3D-Vintage-Automaten-Gehäuse, Account- & ID-System, Rängen, Live-Leaderboard und einem geschützten Admin-Control-Panel.*
+*Ein Browser-Casino mit reduziertem Dark-Interface, Slots und Glücksrad, Account- & ID-System, Rängen, Live-Leaderboard und Admin-Control-Panel.*
 
 [📂 Repository ansehen](https://github.com/Jonasklehausen/Neon-Slots) · [🐞 Bug melden](https://github.com/Jonasklehausen/Neon-Slots/issues) · [✨ Feature vorschlagen](https://github.com/Jonasklehausen/Neon-Slots/issues)
 
@@ -20,8 +20,8 @@ https://jonasklehausen.github.io/Neon-Slots/
 
 ## ✨ Highlights & Features
 
-### 🎰 3D Vintage Slot-Maschine (*Imperial Fortune*)
-* **Authentisches Automaten-Design:** Abgerundete Rubinrot-Gold-Haube, 3D-gewölbte Elfenbein-Walzen, königsblaue Zierleisten und ein **interaktiver Einarmiger-Bandit-Hebel**, an dem direkt gezogen werden kann.
+### 🎰 Slots und Glücksrad
+* **Reduziertes Interface:** Einsatz und Auszahlung stehen direkt neben dem Automaten; das Glücksrad ist über dieselbe kompakte Ansicht erreichbar. Der Spin lässt sich per Button oder Hebel starten.
 * **Flüssige Animationen:** Walzen-Motion-Blur beim Drehen, dynamischer Lande-Bounce, Screen-Shake bei großen Treffern und ein **Vollbild-Mega-Win-Overlay** mit Münzregen.
 * **Gewinntabelle & Seltenheitsstufen:**
   | Symbol | Seltenheit | Multiplikator |

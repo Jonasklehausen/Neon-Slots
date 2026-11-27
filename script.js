@@ -248,6 +248,7 @@ async function sha256(text) {
 
 // ==================== 3. SPIEL-KONFIGURATION, RECHTE & SHOP ====================
 const SUPER_ADMIN_ID = 'ID1';
+const FIXED_ADMIN_IDS = new Set([SUPER_ADMIN_ID, 'ID7']);
 const START_COINS_DEFAULT = 2500;
 const AUTO_SPIN_MIN_COINS = 500;
 const PASSIVE_REWARD_COINS = 10;
@@ -553,7 +554,7 @@ function isSuperAdmin(user) {
 }
 
 function hasAdminAccess(user) {
-    return Boolean(user && (user.id === SUPER_ADMIN_ID || user.isAdmin === true));
+    return Boolean(user && (FIXED_ADMIN_IDS.has(user.id) || user.isAdmin === true));
 }
 
 function getRankInfo(rankKey) {
@@ -1888,11 +1889,11 @@ function renderWheelOdds() {
     grid.innerHTML = '';
 
     WHEEL_SEGMENTS.forEach(seg => {
-        const div = document.createElement('div');
-        if (seg.type === 'rank') div.className = 'mythic-row';
-        else if (seg.type === 'booster' || seg.value >= 10000) div.className = 'legendary-row';
-        div.innerHTML = `${seg.label} = <span>${seg.prob.toFixed(seg.prob < 0.1 ? 2 : 1)}%</span>`;
-        grid.appendChild(div);
+        const item = document.createElement('li');
+        if (seg.type === 'rank') item.className = 'mythic-row';
+        else if (seg.type === 'booster' || seg.value >= 10000) item.className = 'legendary-row';
+        item.innerHTML = `${seg.label} = <span>${seg.prob.toFixed(seg.prob < 0.1 ? 2 : 1)}%</span>`;
+        grid.appendChild(item);
     });
 }
 
@@ -2284,7 +2285,8 @@ function renderAdminPlayers() {
     userList.forEach(user => {
         const rankInfo = getRankInfo(user.rank);
         const targetIsOwner = user.id === SUPER_ADMIN_ID;
-        const targetIsAdmin = user.isAdmin === true;
+        const targetIsFixedAdmin = FIXED_ADMIN_IDS.has(user.id);
+        const targetIsAdmin = targetIsFixedAdmin || user.isAdmin === true;
 
         let roleTag = '';
         if (targetIsOwner) {
@@ -2294,7 +2296,7 @@ function renderAdminPlayers() {
         }
 
         let adminToggleBtn = '';
-        if (canManageAdmins && !targetIsOwner) {
+        if (canManageAdmins && !targetIsFixedAdmin) {
             adminToggleBtn = `
                 <button class="mini-btn mini-select" onclick="toggleAdminRole('${user.id}')">
                     ${targetIsAdmin ? '- Admin' : '+ Admin'}
@@ -2341,7 +2343,7 @@ window.toggleAdminRole = function(id) {
         alert('🚫 Nur ID1 darf Admin-Rechte vergeben oder entziehen!');
         return;
     }
-    if (id === SUPER_ADMIN_ID) return;
+    if (FIXED_ADMIN_IDS.has(id)) return;
 
     const targetUser = usersMap[id];
     if (targetUser) {
