@@ -1706,3 +1706,350 @@ body.troll-earthquake {
     color: var(--gold-light);
     text-shadow: none;
 }
+
+:root {
+    --bg-obsidian: #090b0a;
+    --gold-light: #f3e7bd;
+    --gold-main: #c9a85b;
+    --gold-rich: #a98945;
+    --gold-dark: #725d31;
+    --gold-gradient: linear-gradient(135deg, #c9a85b, #f3e7bd);
+    --gold-btn-gradient: linear-gradient(135deg, #d9bd79, #c3a254);
+    --text-main: #f1f2ee;
+    --text-muted: #9a9e98;
+}
+
+body {
+    background: radial-gradient(ellipse at top, #171a17 0%, #0c0e0d 48%, #090b0a 100%);
+}
+
+.navbar {
+    padding: 16px clamp(16px, 4vw, 56px);
+    background: rgba(9, 11, 10, 0.92);
+    border-bottom-color: rgba(201, 168, 91, 0.16);
+}
+
+.logo {
+    font-size: 1.35rem;
+    letter-spacing: 0.12em;
+}
+
+.stats-bar {
+    gap: 8px;
+}
+
+.wallet,
+.admin-trigger-btn,
+.logout-btn,
+.nav-link-btn {
+    background: #141715;
+    border-color: #292d29;
+    border-radius: 10px;
+}
+
+.container {
+    max-width: 1080px;
+    margin: 32px auto;
+    align-items: stretch;
+    gap: 18px;
+}
+
+.mode-switcher {
+    margin: 0 auto;
+    background: #111412;
+    border-color: #282d29;
+    border-radius: 12px;
+    box-shadow: none;
+}
+
+.mode-tab,
+.btn-spin,
+.cabinet-sub-btn,
+.btn-admin-primary,
+.btn-admin-success,
+.btn-admin-danger,
+.btn-admin-secondary,
+.btn-admin-gold {
+    letter-spacing: normal;
+}
+
+.mode-tab.active {
+    box-shadow: none;
+}
+
+.active-boosters-bar {
+    margin: 0 auto;
+}
+
+.cabinet-wrapper {
+    max-width: 560px;
+}
+
+.vintage-cabinet {
+    max-width: 500px;
+    filter: drop-shadow(0 22px 35px rgba(0, 0, 0, 0.38));
+}
+
+.cabinet-hood {
+    padding: 20px;
+    background: #171a17;
+    border: 1px solid #343a32;
+    border-bottom: 0;
+    border-radius: 18px 18px 0 0;
+    box-shadow: none;
+}
+
+.hood-title {
+    font-size: 1.1rem;
+    letter-spacing: 0.14em;
+    color: var(--gold-light);
+    background: none;
+    -webkit-text-fill-color: currentColor;
+    filter: none;
+}
+
+.cabinet-body {
+    padding: 16px;
+    background: #111412;
+    border: 1px solid #343a32;
+    border-top: 1px solid #292e29;
+    border-bottom: 0;
+    box-shadow: none;
+}
+
+.reels-bezel {
+    gap: 10px;
+    padding: 10px;
+    background: #090b0a;
+    border: 1px solid #343a32;
+    border-radius: 12px;
+    box-shadow: none;
+}
+
+.reels-container {
+    gap: 8px;
+    padding: 0;
+}
+
+.reel {
+    height: 140px;
+    background: #f0eee7;
+    border: 1px solid #c9a85b;
+    border-radius: 10px;
+    box-shadow: inset 0 0 18px rgba(0, 0, 0, 0.12);
+}
+
+.status-plate-row {
+    margin-top: 12px;
+}
+
+.status-text {
+    padding: 10px 12px;
+    background: #171a17;
+    border: 1px solid #343a32;
+    border-radius: 9px;
+    box-shadow: none;
+    color: var(--text-main);
+}
+
+.cabinet-base {
+    margin: 0;
+    padding: 16px;
+    background: #111412;
+    border: 1px solid #343a32;
+    border-top: 0;
+    border-radius: 0 0 18px 18px;
+    box-shadow: none;
+}
+
+.payout-tray {
+    padding: 0;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+}
+
+.controls {
+    margin-top: 0;
+}
+
+.bet-input-wrapper {
+    justify-content: space-between;
+    background: #171a17;
+    border-color: #292e29;
+    border-radius: 9px;
+}
+
+#bet-input,
+.admin-input {
+    background: #0c0f0d;
+    border-color: #343a32;
+    border-radius: 8px;
+}
+
+.btn-spin {
+    padding: 13px 16px;
+    background: var(--gold-btn-gradient);
+    border: 0;
+    border-radius: 9px;
+    box-shadow: none;
+}
+
+.btn-spin:hover:not(:disabled) {
+    box-shadow: 0 6px 18px rgba(201, 168, 91, 0.2);
+}
+
+.cabinet-sub-btn {
+    border-color: #343a32;
+    border-radius: 8px;
+}
+
+.paytable,
+.leaderboard-card,
+.profit-scale-card {
+    max-width: 100%;
+    background: #111412;
+    border: 1px solid #292e29;
+    border-radius: 14px;
+    box-shadow: none;
+}
+
+.paytable {
+    padding: 18px;
+}
+
+.paytable-grid {
+    gap: 8px;
+}
+
+.paytable-grid div,
+.scale-stat-item {
+    background: #171a17;
+    border: 1px solid #252a26;
+    border-radius: 8px;
+}
+
+.leaderboard-card,
+.profit-scale-card {
+    padding: 22px;
+}
+
+.leaderboard-header,
+.profit-scale-header {
+    border-bottom-color: #292e29;
+}
+
+.leaderboard-header h2,
+.profit-scale-header h3 {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 1.05rem;
+    letter-spacing: 0.02em;
+    color: var(--text-main);
+    background: none;
+    -webkit-text-fill-color: currentColor;
+}
+
+.subtitle-crown {
+    letter-spacing: 0.12em;
+}
+
+.leaderboard-table th {
+    border-bottom-color: #292e29;
+}
+
+.leaderboard-table td {
+    border-bottom-color: #202420;
+}
+
+.chat-messages {
+    background: #0c0f0d;
+    border-color: #292e29;
+    border-radius: 10px;
+    scrollbar-color: #555b52 #111412;
+}
+
+.chat-msg {
+    background: #171a17;
+    border-color: #252a26;
+    border-radius: 8px;
+}
+
+.modal-box {
+    background: #111412;
+    border-color: #343a32;
+    border-radius: 16px;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+}
+
+.modal-header {
+    border-bottom-color: #292e29;
+}
+
+.modal-header h2,
+.auth-box h2 {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    color: var(--text-main);
+}
+
+.admin-card {
+    background: #171a17;
+    border-color: #292e29;
+    border-radius: 12px;
+}
+
+.auth-tabs {
+    background: #0c0f0d;
+    border-color: #292e29;
+}
+
+.auth-tab.active {
+    background: #d3b66f;
+}
+
+button,
+a,
+input,
+select {
+    transition: border-color 0.18s ease, background-color 0.18s ease, color 0.18s ease;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible {
+    outline: 2px solid var(--gold-main);
+    outline-offset: 2px;
+}
+
+@media (max-width: 640px) {
+    .navbar {
+        justify-content: center;
+        padding: 14px 12px;
+    }
+
+    .stats-bar {
+        justify-content: center;
+    }
+
+    .container {
+        gap: 14px;
+    }
+
+    .cabinet-hood {
+        padding: 16px;
+    }
+
+    .cabinet-body,
+    .cabinet-base {
+        padding: 12px;
+    }
+
+    .reel {
+        height: 112px;
+    }
+
+    .leaderboard-card,
+    .profit-scale-card {
+        padding: 16px;
+    }
+}

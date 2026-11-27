@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AURELIA ROYALE | Private Gold Casino</title>
-    <link rel="stylesheet" href="style.css?v=20261126">
+    <link rel="stylesheet" href="style.css?v=20261127">
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800;900&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -71,59 +71,32 @@
         <div id="active-boosters-bar" class="active-boosters-bar hidden"></div>
 
         <!-- ECHTE 3D VINTAGE SLOT MASCHINE -->
-        <div id="slots-mode-wrapper" class="mode-panel">
+        <section id="slots-mode-wrapper" class="mode-panel">
         <div class="cabinet-wrapper">
             <div id="slot-card" class="vintage-cabinet">
                 
-                <div class="cabinet-hood">
-                    <div class="hood-ornament">
-                        <span class="ornament-wing">❧</span>
-                        <div class="ornament-medallion">👑</div>
-                        <span class="ornament-wing">☙</span>
-                    </div>
-                    <div class="hood-title">IMPERIAL FORTUNE</div>
-                </div>
+                <header class="cabinet-hood">
+                    <h2 class="hood-title">IMPERIAL FORTUNE</h2>
+                </header>
 
-                <div class="cabinet-body">
+                <section class="cabinet-body">
                     <div class="gold-pointer-top">▼</div>
                     
                     <div class="reels-bezel">
-                        <div class="side-track">
-                            <span class="gem-stud"></span>
-                            <span class="gem-stud"></span>
-                            <span class="gem-stud"></span>
-                            <span class="gem-stud"></span>
-                        </div>
-
                         <div class="reels-container">
                             <div class="reel" id="reel1"><span class="reel-symbol">💎</span></div>
                             <div class="reel" id="reel2"><span class="reel-symbol">7️⃣</span></div>
                             <div class="reel" id="reel3"><span class="reel-symbol">👑</span></div>
                         </div>
-
-                        <div class="side-track">
-                            <span class="gem-stud"></span>
-                            <span class="gem-stud"></span>
-                            <span class="gem-stud"></span>
-                            <span class="gem-stud"></span>
-                        </div>
                     </div>
 
                     <div class="status-plate-row">
-                        <div id="status-text" class="status-text">Einsatz wählen & Hebel ziehen!</div>
-                        <div class="coin-slot-emblem" title="Münzeinwurf">COINS</div>
+                        <output id="status-text" class="status-text">Einsatz wählen & Hebel ziehen!</output>
                     </div>
-                </div>
-
-                <div class="cabinet-trim-bar">
-                    <span class="chrome-switch"></span>
-                    <span class="chrome-button"></span>
-                    <span class="chrome-switch"></span>
-                </div>
+                </section>
 
                 <div class="cabinet-base">
                     <div class="payout-tray">
-                        <div class="tray-lock">👁️</div>
                         <div class="controls">
                             <div class="bet-input-wrapper">
                                 <label for="bet-input">Einsatz (min. 1 🪙):</label>
@@ -142,11 +115,6 @@
                         </div>
                     </div>
 
-                    <div class="base-royal-trim">
-                        <span class="corner-rivet"></span>
-                        <span class="base-filigree">⚜ AURELIA ROYALE ⚜</span>
-                        <span class="corner-rivet"></span>
-                    </div>
                 </div>
 
             </div>
@@ -160,7 +128,7 @@
         </div>
 
         <!-- Erweiterte Gewinntabelle -->
-        <div class="paytable">
+        <section class="paytable">
             <h3>✦ AUSZAHLUNGSTABELLE (3 GLEICHE SYMBOLE) ✦</h3>
             <div class="paytable-grid">
                 <div class="mythic-row">🌌 🌌 🌌 (Mythisch) = <span>1000x</span></div>
@@ -170,20 +138,15 @@
                 <div>🔔 🔔 🔔 = <span>5x</span></div>
                 <div>🍒 / 🍋 = <span>2x - 3x</span></div>
             </div>
-        </div>
-        </div>
+        </section>
+        </section>
 
         <!-- NEUER GAMEMODE: GLÜCKSRAD -->
         <section id="wheel-mode-wrapper" class="mode-panel hidden">
             <div class="vintage-cabinet wheel-cabinet">
-                <div class="cabinet-hood">
-                    <div class="hood-ornament">
-                        <span class="ornament-wing">❧</span>
-                        <div class="ornament-medallion">🎡</div>
-                        <span class="ornament-wing">☙</span>
-                    </div>
-                    <div class="hood-title">WHEEL OF FORTUNE</div>
-                </div>
+                <header class="cabinet-hood">
+                    <h2 class="hood-title">WHEEL OF FORTUNE</h2>
+                </header>
 
                 <div class="cabinet-body wheel-body">
                     <div class="wheel-stage">
@@ -195,20 +158,12 @@
                     </div>
 
                     <div class="status-plate-row">
-                        <div id="wheel-status-text" class="status-text">Drehe für Coins, Boosts &amp; exklusive Ränge!</div>
-                        <div class="coin-slot-emblem" title="Glücksrad-Einsatz">SPIN</div>
+                        <output id="wheel-status-text" class="status-text">Drehe für Coins, Boosts &amp; exklusive Ränge!</output>
                     </div>
-                </div>
-
-                <div class="cabinet-trim-bar">
-                    <span class="chrome-switch"></span>
-                    <span class="chrome-button"></span>
-                    <span class="chrome-switch"></span>
                 </div>
 
                 <div class="cabinet-base">
                     <div class="payout-tray">
-                        <div class="tray-lock">🎡</div>
                         <div class="controls">
                             <div class="bet-input-wrapper">
                                 <label>Einsatz pro Dreh:</label>
@@ -218,18 +173,13 @@
                         </div>
                     </div>
 
-                    <div class="base-royal-trim">
-                        <span class="corner-rivet"></span>
-                        <span class="base-filigree">⚜ AURELIA FORTUNA ⚜</span>
-                        <span class="corner-rivet"></span>
-                    </div>
                 </div>
             </div>
 
-            <div class="paytable">
+            <section class="paytable">
                 <h3>✦ GLÜCKSRAD – GEWINNE &amp; CHANCEN ✦</h3>
                 <div id="wheel-odds-grid" class="paytable-grid"></div>
-            </div>
+            </section>
         </section>
 
         <!-- VERMÖGENS-SKALA & GEWINN-BILANZ -->
